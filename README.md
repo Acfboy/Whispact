@@ -1,16 +1,21 @@
-# Tauri + Vue + TypeScript
+# Whispact：重要的话，用仪式说
+—— 当有些话必须开口，却难以直视彼此的眼睛
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+在师生、亲子、挚友或恋人之间，总有些话语徘徊在真心与顾忌之间：
+- 想对父母说“你的关心让我压力很大”，却怕伤害他们的期待
+- 想提醒朋友“你玩笑的尺度让我不适”，却担心显得小题大做
+- 想告诉学生“你很有潜力，但需要更专注”，又怕打击他的自信
 
-## Recommended IDE Setup
+我们让这些微妙情感，借科技的温度安全着陆：
+- 📱 碰触传递：手机轻碰即传送加密信件，像递出一封实体信般郑重
+- 🗝️ 时空密钥：背对背时指南针解锁内容，让物理距离成为坦诚的契机
+- 💨 消散仪式：向上划动后文字如樱花飘散，化解当面删除的尴尬
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+无论是说不出口的歉意、难启齿的建议，还是隐秘的感谢，在这里：
+- ✨ 每一次触碰都是精心设计的沟通仪式
+- ✨ 每一段距离都在保护关系中脆弱的部分
+- ✨ 每一秒消散都在减轻「说真话」的心理负担
 
-## Type Support For `.vue` Imports in TS
+> 有些话不必永远存在，但需要被郑重对待
 
-Since TypeScript cannot handle type information for `.vue` imports, they are shimmed to be a generic Vue component type by default. In most cases this is fine if you don't really care about component prop types outside of templates. However, if you wish to get actual prop types in `.vue` imports (for example to get props validation when using manual `h(...)` calls), you can enable Volar's Take Over mode by following these steps:
-
-1. Run `Extensions: Show Built-in Extensions` from VS Code's command palette, look for `TypeScript and JavaScript Language Features`, then right click and select `Disable (Workspace)`. By default, Take Over mode will enable itself if the default TypeScript extension is disabled.
-2. Reload the VS Code window by running `Developer: Reload Window` from the command palette.
-
-You can learn more about Take Over mode [here](https://github.com/johnsoncodehk/volar/discussions/471).
+Whispact，把那些卡在喉咙里的真心话，变成值得珍藏的关系破冰时刻。

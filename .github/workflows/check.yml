@@ -1,0 +1,61 @@
+name: Frontend and Backend Checks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  frontend-checks:
+    name: Frontend Checks (Prettier & ESLint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'  # 启用 pnpm 缓存
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false  # 不自动运行 pnpm install
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --strict-peer-dependencies
+
+      - name: Run Prettier Check
+        run: pnpm prettier --check "src/**/*.{js,ts,jsx,tsx,css,scss,html}"
+
+      - name: Run ESLint Check
+        run: pnpm eslint src/ --ext .js,.ts,.jsx,.tsx
+
+  backend-checks:
+    name: Backend Checks (cargo fmt, cargo clippy, cargo test)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          override: true
+          toolchain: stable
+          components: clippy
+
+      - name: Run cargo fmt check
+        run: cargo fmt --manifest-path tauri-src/Cargo.toml -- --check
+
+      - name: Run cargo clippy
+        run: cargo clippy --manifest-path tauri-src/Cargo.toml -- -D warnings
+
+      - name: Run cargo test
+        run: cargo test --manifest-path tauri-src/Cargo.toml
