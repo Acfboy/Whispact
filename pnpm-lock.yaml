@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@mnlphlp/plugin-blec':
+        specifier: ^0.4.1
+        version: 0.4.1
       '@tauri-apps/api':
         specifier: ^2
         version: 2.4.1
@@ -285,6 +288,9 @@ packages:
 
   '@jridgewell/sourcemap-codec@1.5.0':
     resolution: {integrity: sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ==}
+
+  '@mnlphlp/plugin-blec@0.4.1':
+    resolution: {integrity: sha512-oxxgZVjh3anarvkp+nyHuM9/5KMQr6EdU6SWEult7Y4ZJFf314nDYZR8ExRoKQP9YOBQZ3tmpJlhchqRKjLXdA==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -1255,6 +1261,10 @@ snapshots:
   '@humanwhocodes/retry@0.4.2': {}
 
   '@jridgewell/sourcemap-codec@1.5.0': {}
+
+  '@mnlphlp/plugin-blec@0.4.1':
+    dependencies:
+      '@tauri-apps/api': 2.4.1
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:

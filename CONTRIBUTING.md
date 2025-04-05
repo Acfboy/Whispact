@@ -19,9 +19,11 @@
 - `cargo clippy` 潜在问题检查。
 - `cargo test` 运行测试。
 
-## `TODO.md`
+## `TODO.md` / `ROADMAP.md`
 
 `TODO.md` 一级一级写要做的事。交代码记得更新。
+
+`ROADMAP.md` 写总体要实现的功能。
 
 ## 文档
 
