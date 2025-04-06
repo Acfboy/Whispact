@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use tauri::{
   plugin::{Builder, TauriPlugin},
   Manager, Runtime,
@@ -8,7 +10,7 @@ pub use models::*;
 #[cfg(desktop)]
 mod desktop;
 #[cfg(mobile)]
-mod mobile;
+pub mod mobile;
 
 mod commands;
 mod error;
@@ -23,12 +25,12 @@ use mobile::Blep;
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the blep APIs.
 pub trait BlepExt<R: Runtime> {
-  fn blep(&self) -> &Blep<R>;
+  fn blep(&self) -> Arc<Blep<R>>;
 }
 
 impl<R: Runtime, T: Manager<R>> crate::BlepExt<R> for T {
-  fn blep(&self) -> &Blep<R> {
-    self.state::<Blep<R>>().inner()
+  fn blep(&self) -> Arc<Blep<R>> {
+    (*self.state::<Arc<Blep<R>>>()).clone()
   }
 }
 
@@ -38,7 +40,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
     .invoke_handler(tauri::generate_handler![])
     .setup(|app, api| {
       #[cfg(mobile)]
-      let blep = mobile::init(app, api)?;
+      let blep = Arc::new(mobile::init(app, api)?);
       #[cfg(desktop)]
       let blep = desktop::init(app, api)?;
       app.manage(blep);
