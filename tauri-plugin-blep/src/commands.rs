@@ -1,13 +1,5 @@
-use tauri::{AppHandle, command, Runtime};
+// use tauri::{command, AppHandle, Runtime};
 
-use crate::models::*;
-use crate::Result;
-use crate::BlepExt;
-
-#[command]
-pub(crate) async fn ping<R: Runtime>(
-    app: AppHandle<R>,
-    payload: PingRequest,
-) -> Result<PingResponse> {
-    app.blep().ping(payload)
-}
+// use crate::models::*;
+// use crate::BlepExt;
+// use crate::Result;

@@ -1,5 +1,7 @@
 use serde::de::DeserializeOwned;
+use serde_json;
 use tauri::{
+  ipc::{Channel, InvokeResponseBody},
   plugin::{PluginApi, PluginHandle},
   AppHandle, Runtime,
 };
@@ -25,10 +27,26 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 pub struct Blep<R: Runtime>(PluginHandle<R>);
 
 impl<R: Runtime> Blep<R> {
-  pub fn ping(&self, payload: PingRequest) -> crate::Result<PingResponse> {
-    self
-      .0
-      .run_mobile_plugin("ping", payload)
+  pub fn setup<F>(&self, callback: F) -> crate::Result<()>
+  where
+    F: Fn(RecvEvent) + Send + Sync + 'static
+  {
+    let channel = Channel::new(move |event| {
+      let payload = match event {
+        InvokeResponseBody::Json(payload) => serde_json::from_str::<RecvEvent>(&payload).unwrap_or_else(|err| RecvEvent::error(format!("Could not deserialize {err}"))),
+        _ => RecvEvent::error("Unexpected event payload".to_string()),
+      };
+      callback(payload);
+      Ok(())
+    });
+    self.0
+      .run_mobile_plugin("setup", WatchRecvPayload { channel })
+      .map_err(Into::into)
+  }
+
+  pub fn send(&self, message: String) -> crate::Result<SendResponse> {
+    self.0
+      .run_mobile_plugin("send", SendRequest { message })
       .map_err(Into::into)
   }
 }

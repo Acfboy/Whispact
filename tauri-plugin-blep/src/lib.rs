@@ -35,7 +35,7 @@ impl<R: Runtime, T: Manager<R>> crate::BlepExt<R> for T {
 /// Initializes the plugin.
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
   Builder::new("blep")
-    .invoke_handler(tauri::generate_handler![commands::ping])
+    .invoke_handler(tauri::generate_handler![])
     .setup(|app, api| {
       #[cfg(mobile)]
       let blep = mobile::init(app, api)?;

@@ -6,18 +6,27 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
+import android.bluetooth.BluetoothProfile
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log  
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import app.tauri.annotation.Command
+import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.Invoke
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
+import app.tauri.plugin.Channel
 import java.util.*
-import java.util.concurrent.ConcurrentLinkedQueue
+import com.plugin.blep.WatchArgs
+
+
+@InvokeArg
+class WatchArgs {
+    lateinit var channel: Channel
+}
 
 @TauriPlugin
 class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
@@ -35,16 +44,14 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
         }.toTypedArray()
     }
 
-    private val receiveQueue = ConcurrentLinkedQueue<String>()
     private lateinit var blePeripheral: BlePeripheralUtils
     private lateinit var notifyCharacteristic: BluetoothGattCharacteristic
+    private var recvChannel: Channel? = null
 
     private val connectedDevice: BluetoothDevice?
         get() = blePeripheral.getConnectedDevices().firstOrNull()
 
-    init {
-        checkAndRequestPermissions()
-    }
+    init {}
 
     private fun checkAndRequestPermissions() {
         if (hasAllPermissions()) {
@@ -58,7 +65,6 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
-    // 添加Activity结果回调处理
     fun onActivityResult(requestCode: Int, resultCode: Int) {
         when (requestCode) {
             PERMISSION_REQUEST_CODE -> {
@@ -75,6 +81,13 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
         return REQUIRED_PERMISSIONS.all {
             ContextCompat.checkSelfPermission(activity, it) == PackageManager.PERMISSION_GRANTED
         }
+    }
+
+    @Command
+    fun setup(invoke: Invoke) {
+        var args = invoke.parseArgs(WatchArgs::class.java);
+        recvChannel = args.channel;
+        checkAndRequestPermissions();
     }
 
     private fun setupBlePeripheral() {
@@ -115,7 +128,17 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
                     device: BluetoothDevice, 
                     status: Int, 
                     newState: Int
-                ) {}
+                ) {
+                    if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                        activity.runOnUiThread {
+                            recvChannel?.sendObject(JSObject().apply {
+                                put("status", "disconnected")
+                                put("message", "")
+                            })
+                            recvChannel = null // 断开时自动释放
+                        }
+                    }
+                }
 
                 override fun onCharacteristicWriteRequest(
                     device: BluetoothDevice,
@@ -126,7 +149,16 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
                     offset: Int,
                     value: ByteArray
                 ) {
-                    receiveQueue.add(String(value))
+                    activity.runOnUiThread {
+                        try {
+                            recvChannel?.sendObject(JSObject().apply {
+                                put("status", "connected")
+                                put("message", String(value))
+                            })
+                        } catch (e: IllegalStateException) {
+                            recvChannel = null
+                        }
+                    }
                 }
             }
             
@@ -136,14 +168,6 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
                 Log.e("BlePlugin", "Bluetooth operation failed: ${e.message}")
             }
         }
-    }
-
-    @Command
-    fun tryRecv(invoke: Invoke) {
-        val ret = JSObject().apply {
-            put("message", receiveQueue.poll() ?: "")
-        }
-        invoke.resolve(ret)
     }
 
     @Command
