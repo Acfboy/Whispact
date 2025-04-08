@@ -1,11 +1,12 @@
 use serde::de::DeserializeOwned;
 use serde_json;
 use tauri::{
-    async_runtime::{block_on, Sender},
     ipc::{Channel, InvokeResponseBody},
     plugin::{PluginApi, PluginHandle},
     AppHandle, Runtime,
 };
+use tokio::sync::mpsc;
+use tokio::sync::watch;
 
 use crate::models::*;
 
@@ -32,8 +33,8 @@ impl<R: Runtime> Blep<R> {
     /// 传入 message_sender 用于转发收到的信息，connect_notifier 用于转发连接的变化。
     pub fn setup(
         &self,
-        message_sender: Sender<RecvMessage>,
-        connect_notifier: Sender<ConnectionStatus>,
+        message_sender: mpsc::UnboundedSender<RecvMessage>,
+        connect_notifier: watch::Sender<ConnectionStatus>,
     ) -> crate::Result<()> {
         // 创建传输消息的 IPC channel，解析收到的消息后用 message_sender 转发。
         let channel = Channel::new(move |event| {
@@ -43,9 +44,7 @@ impl<R: Runtime> Blep<R> {
                 _ => RecvMessage::default(),
             };
             let sender = message_sender.clone();
-            block_on(async move {
-                sender.send(payload).await.unwrap();
-            });
+            sender.send(payload).expect("send received ble peripheral message failed");
             Ok(())
         });
 
@@ -57,9 +56,7 @@ impl<R: Runtime> Blep<R> {
                 _ => ConnectionStatus::Disconnected,
             };
             let sender = connect_notifier.clone();
-            block_on(async move {
-                sender.send(payload).await.unwrap();
-            });
+            sender.send(payload).expect("send ble peripheral connection change failed");
             Ok(())
         });
 

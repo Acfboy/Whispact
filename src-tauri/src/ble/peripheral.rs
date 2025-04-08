@@ -1,20 +1,20 @@
 use std::sync::Arc;
 use super::{BLEComm, Message};
-use tauri::{
-    async_runtime::{block_on, channel, Receiver},
-    Runtime,
-};
+use tauri::async_runtime::block_on;
+use tauri::Runtime;
 use tauri_plugin_blep::{mobile::Blep, ConnectionStatus, RecvMessage};
+use tokio::sync::mpsc;
+use tokio::sync::watch;
 
 /// 封装 BLE 中外设通信。
 pub struct BLEPeripheral<R: Runtime> {
     /// 用于接收 BLE 收到的消息
     /// 在 BLE 外设接收到消息的回调中，会有一个 Sender 通过通道将消息发送给这个 Receiver。
     /// 广播开始的时候放入 Receiver，之前为 None。
-    recv_msg_receiver: Option<Receiver<RecvMessage>>,
+    recv_msg_receiver: Option<mpsc::UnboundedReceiver<RecvMessage>>,
 
     /// 接收连接变化消息
-    connect_notifier: Option<Receiver<ConnectionStatus>>,
+    connect_watcher: Option<watch::Receiver<ConnectionStatus>>,
 
     /// 保存 ble 外设插件类的引用。
     blep: Option<Arc<Blep<R>>>,
@@ -23,13 +23,11 @@ pub struct BLEPeripheral<R: Runtime> {
     is_advertize_start: bool,
 }
 
-const CHANNEL_SIZE: usize = 100;
-
 impl<R: Runtime> BLEPeripheral<R> {
     pub fn new() -> Self {
         Self {
             recv_msg_receiver: None,
-            connect_notifier: None,
+            connect_watcher: None,
             blep: None,
             is_advertize_start: false,
         }
@@ -44,11 +42,10 @@ impl<R: Runtime> BLEPeripheral<R> {
 
         self.blep = Some(blep.clone());
 
-        let (sd, rv) = channel(CHANNEL_SIZE);
+        let (sd, rv) = mpsc::unbounded_channel();
         self.recv_msg_receiver = Some(rv);
-
-        let (noti_sd, noti_rv) = channel(CHANNEL_SIZE);
-        self.connect_notifier = Some(noti_rv);
+        let (noti_sd, noti_rv) = watch::channel(ConnectionStatus::Disconnected);
+        self.connect_watcher = Some(noti_rv);
 
         blep.setup(sd, noti_sd)?;
 
@@ -71,11 +68,22 @@ impl<R: Runtime> BLEComm for BLEPeripheral<R> {
     }
 
     /// 取走消息接收端。如果没有初始化过或者已经取走，则 panic
-    fn take_recv<'a>(&mut self) -> Receiver<impl Message + 'a> {
+    /// TODO: 更好的错误处理
+    fn take_recv<'a>(&mut self) -> mpsc::UnboundedReceiver<impl Message + 'a> {
         self.recv_msg_receiver.take().expect("peripheral recv_msg_receiver is None")
     }
 
+    /// 阻塞直到连接成功。如果没有初始化，则 panic。
     fn connect(&mut self) {
-        unimplemented!()
+        if let Some(watcher) = &mut self.connect_watcher {
+            if let ConnectionStatus::Disconnected = *watcher.borrow() {
+                let mut watcher_1 = watcher.clone();
+                block_on(async move {
+                    watcher_1.changed().await.unwrap();
+                });
+            }
+        } else {
+            panic!("connect before setup");
+        }
     }
 }

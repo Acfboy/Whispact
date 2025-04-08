@@ -1,6 +1,6 @@
 mod central;
 pub mod peripheral;
-use tauri::async_runtime::Receiver;
+use tokio::sync::mpsc;
 
 
 // type IMessage = impl Message;
@@ -10,7 +10,7 @@ pub trait BLEComm {
     fn send(&self, message: String) -> Result<(), String>;
 
     /// 取出一个接收器
-    fn take_recv<'a>(&mut self) -> Receiver<impl Message + 'a>; 
+    fn take_recv<'a>(&mut self) -> mpsc::UnboundedReceiver<impl Message + 'a>; 
 
     /// 阻塞直到连接完成
     /// 用于在触碰后等待连接。
