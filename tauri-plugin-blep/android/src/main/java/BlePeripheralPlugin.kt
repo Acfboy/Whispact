@@ -47,6 +47,7 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
     private lateinit var blePeripheral: BlePeripheralUtils
     private lateinit var notifyCharacteristic: BluetoothGattCharacteristic
     private var recvChannel: Channel? = null
+    private var connectChannel: Channel? = null
 
     private val connectedDevice: BluetoothDevice?
         get() = blePeripheral.getConnectedDevices().firstOrNull()
@@ -86,8 +87,9 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
     @Command
     fun setup(invoke: Invoke) {
         var args = invoke.parseArgs(WatchArgs::class.java);
-        recvChannel = args.channel;
-        checkAndRequestPermissions();
+        recvChannel = args.channel
+        connectChannel = args.connectNotifier
+        checkAndRequestPermissions()
     }
 
     private fun setupBlePeripheral() {
@@ -130,13 +132,13 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
                     newState: Int
                 ) {
                     if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                        activity.runOnUiThread {
-                            recvChannel?.sendObject(JSObject().apply {
-                                put("status", "disconnected")
-                                put("message", "")
-                            })
-                            recvChannel = null // 断开时自动释放
-                        }
+                        connectChannel.send(JSObject().apply {
+                            put("type", "Disconnected")
+                        })
+                    } else if (newState = BluetoothProfile.STATE_CONNECTED) {
+                        connectChannel.send(JSObject().apply {
+                            put("type", "Connected")
+                        })
                     }
                 }
 
@@ -151,10 +153,9 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
                 ) {
                     activity.runOnUiThread {
                         try {
-                            recvChannel?.sendObject(JSObject().apply {
-                                put("status", "connected")
-                                put("message", String(value))
-                            })
+                            recvChannel?.send(JSObject().apply {
+                                put("msg", String(value))
+                            }) 
                         } catch (e: IllegalStateException) {
                             recvChannel = null
                         }

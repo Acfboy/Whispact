@@ -1,9 +1,10 @@
 use serde::de::DeserializeOwned;
 use serde_json;
 use tauri::{
-  ipc::{Channel, InvokeResponseBody},
-  plugin::{PluginApi, PluginHandle},
-  AppHandle, Runtime,
+    async_runtime::{block_on, Sender},
+    ipc::{Channel, InvokeResponseBody},
+    plugin::{PluginApi, PluginHandle},
+    AppHandle, Runtime,
 };
 
 use crate::models::*;
@@ -13,40 +14,63 @@ tauri::ios_plugin_binding!(init_plugin_blep);
 
 // initializes the Kotlin or Swift plugin classes
 pub fn init<R: Runtime, C: DeserializeOwned>(
-  _app: &AppHandle<R>,
-  api: PluginApi<R, C>,
+    _app: &AppHandle<R>,
+    api: PluginApi<R, C>,
 ) -> crate::Result<Blep<R>> {
-  #[cfg(target_os = "android")]
-  let handle = api.register_android_plugin("com.plugin.blep", "BlePeripheralPlugin")?;
-  #[cfg(target_os = "ios")]
-  let handle = api.register_ios_plugin(init_plugin_blep)?;
-  Ok(Blep(handle))
+    #[cfg(target_os = "android")]
+    let handle = api.register_android_plugin("com.plugin.blep", "BlePeripheralPlugin")?;
+    #[cfg(target_os = "ios")]
+    let handle = api.register_ios_plugin(init_plugin_blep)?;
+    Ok(Blep(handle))
 }
 
 /// Access to the blep APIs.
 pub struct Blep<R: Runtime>(PluginHandle<R>);
 
 impl<R: Runtime> Blep<R> {
-  pub fn setup<F>(&self, callback: F) -> crate::Result<()>
-  where
-    F: Fn(RecvEvent) + Send + Sync + 'static
-  {
-    let channel = Channel::new(move |event| {
-      let payload = match event {
-        InvokeResponseBody::Json(payload) => serde_json::from_str::<RecvEvent>(&payload).unwrap_or_else(|err| RecvEvent::error(format!("Could not deserialize {err}"))),
-        _ => RecvEvent::error("Unexpected event payload".to_string()),
-      };
-      callback(payload);
-      Ok(())
-    });
-    self.0
-      .run_mobile_plugin("setup", WatchRecvPayload { channel })
-      .map_err(Into::into)
-  }
+    /// 设置插件  
+    /// 传入 message_sender 用于转发收到的信息，connect_notifier 用于转发连接的变化。
+    pub fn setup(
+        &self,
+        message_sender: Sender<RecvMessage>,
+        connect_notifier: Sender<ConnectionStatus>,
+    ) -> crate::Result<()> {
+        // 创建传输消息的 IPC channel，解析收到的消息后用 message_sender 转发。
+        let channel = Channel::new(move |event| {
+            let payload = match event {
+                InvokeResponseBody::Json(payload) => serde_json::from_str(&payload)
+                    .expect("could not deserialize ble peripheral ipc response"),
+                _ => RecvMessage::default(),
+            };
+            let sender = message_sender.clone();
+            block_on(async move {
+                sender.send(payload).await.unwrap();
+            });
+            Ok(())
+        });
 
-  pub fn send(&self, message: String) -> crate::Result<SendResponse> {
-    self.0
-      .run_mobile_plugin("send", SendRequest { message })
-      .map_err(Into::into)
-  }
+        // 传输连接变化信息
+        let connect_notifier = Channel::new(move |event| {
+            let payload = match event {
+                InvokeResponseBody::Json(s) => serde_json::from_str(&s)
+                    .expect("counld not deserizlize ble peripheral connect status response"),
+                _ => ConnectionStatus::Disconnected,
+            };
+            let sender = connect_notifier.clone();
+            block_on(async move {
+                sender.send(payload).await.unwrap();
+            });
+            Ok(())
+        });
+
+        self.0
+            .run_mobile_plugin("setup", WatchRecvPayload { channel, connect_notifier })
+            .map_err(Into::into)
+    }
+
+    pub fn send(&self, message: String) -> crate::Result<SendResponse> {
+        self.0
+            .run_mobile_plugin("send", SendRequest { message })
+            .map_err(Into::into)
+    }
 }

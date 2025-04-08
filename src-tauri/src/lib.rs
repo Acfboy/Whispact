@@ -4,18 +4,19 @@ use tauri::{async_runtime, command, AppHandle, Emitter, Manager, Wry};
 use tauri_plugin_blec;
 use tauri_plugin_blep::{self, BlepExt};
 mod ble;
-use ble::{peripheral::BLEPeripheral, BLEComm};
+use ble::{peripheral::BLEPeripheral, BLEComm, Message};
 
 #[command]
 fn start_ble_peripheral(app: AppHandle) -> Result<(), String> {
     let state = app.state::<Mutex<BLEPeripheral<Wry>>>();
     let mut data = state.lock().unwrap();
     data.setup(app.blep()).map_err(|e| e.to_string())?;
-    let mut rv = data.take_recv();
+    let rv = data.take_recv();
     let handle = app.clone();
     async_runtime::spawn(async move {
+        let mut rv = rv;
         while let Some(m) = rv.recv().await {
-            handle.emit("ble-message-received", m).expect("can't send when ble message received");
+            handle.emit("ble-message-received", m.as_str()).expect("can't send when ble message received");
         }
     });
     Ok(())

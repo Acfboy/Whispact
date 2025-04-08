@@ -4,33 +4,29 @@ use tauri::ipc::Channel;
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SendRequest {
-  pub message: String,
+    pub message: String,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SendResponse {
-  pub success: bool
+    pub success: bool,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WatchRecvPayload {
-  pub channel: Channel,
+    pub channel: Channel,
+    pub connect_notifier: Channel,
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RecvEvent {
-  pub status: String,
-  pub message: String
+pub enum ConnectionStatus {
+    Connected,
+    Disconnected,
 }
 
-impl RecvEvent {
-  pub fn error(s: String) -> Self {
-    RecvEvent {
-      status: "error".to_string(),
-      message: s,
-    }
-  }
+#[derive(Deserialize, Default)]
+pub struct RecvMessage {
+    pub msg: String,
 }
