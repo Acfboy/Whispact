@@ -8,7 +8,7 @@ use tauri::{
 use tokio::sync::mpsc;
 use tokio::sync::watch;
 
-use crate::models::*;
+pub use crate::models::*;
 
 #[cfg(target_os = "ios")]
 tauri::ios_plugin_binding!(init_plugin_blep);

@@ -1,8 +1,8 @@
-use std::sync::Arc;
 use super::{BLEComm, Message};
+use std::sync::Arc;
 use tauri::async_runtime::block_on;
 use tauri::Runtime;
-use tauri_plugin_blep::{mobile::Blep, ConnectionStatus, RecvMessage};
+use tauri_plugin_blep::mobile::{Blep, ConnectionStatus, RecvMessage};
 use tokio::sync::mpsc;
 use tokio::sync::watch;
 
@@ -57,12 +57,16 @@ impl<R: Runtime> BLEPeripheral<R> {
 impl<R: Runtime> BLEComm for BLEPeripheral<R> {
     fn send(&self, msg: String) -> Result<(), String> {
         match self.blep.clone() {
-            Some(blep) => {
-                match block_on(async move { blep.send(msg) }) {
-                    Err(s) => Err(s.to_string()),
-                    Ok(ok) => if ok.success { Ok(()) } else { Err("failed".to_string()) }
+            Some(blep) => match block_on(async move { blep.send(msg) }) {
+                Err(s) => Err(s.to_string()),
+                Ok(ok) => {
+                    if ok.success {
+                        Ok(())
+                    } else {
+                        Err("failed".to_string())
+                    }
                 }
-            }
+            },
             None => Ok(()),
         }
     }
@@ -70,11 +74,13 @@ impl<R: Runtime> BLEComm for BLEPeripheral<R> {
     /// 取走消息接收端。如果没有初始化过或者已经取走，则 panic
     /// TODO: 更好的错误处理
     fn take_recv<'a>(&mut self) -> mpsc::UnboundedReceiver<impl Message + 'a> {
-        self.recv_msg_receiver.take().expect("peripheral recv_msg_receiver is None")
+        self.recv_msg_receiver
+            .take()
+            .expect("peripheral recv_msg_receiver is None")
     }
 
     /// 阻塞直到连接成功。如果没有初始化，则 panic。
-    fn connect(&mut self) {
+    fn connect(&mut self) -> Result<(), String> {
         if let Some(watcher) = &mut self.connect_watcher {
             if let ConnectionStatus::Disconnected = *watcher.borrow() {
                 let mut watcher_1 = watcher.clone();
@@ -82,6 +88,7 @@ impl<R: Runtime> BLEComm for BLEPeripheral<R> {
                     watcher_1.changed().await.unwrap();
                 });
             }
+            Ok(())
         } else {
             panic!("connect before setup");
         }

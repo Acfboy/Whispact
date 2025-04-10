@@ -5,8 +5,6 @@ use tauri::{
     Manager, Runtime,
 };
 
-pub use models::*;
-
 #[cfg(desktop)]
 mod desktop;
 #[cfg(mobile)]

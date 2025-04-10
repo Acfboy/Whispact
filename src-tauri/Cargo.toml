@@ -26,4 +26,4 @@ tauri-plugin-blec = "0.5.2"
 tauri-plugin-blep = { path = "../tauri-plugin-blep" }
 anyhow = "1.0.97"
 tokio = "1.44.2"
-
+uuid = "1.16.0"
