@@ -44,7 +44,9 @@ impl<R: Runtime> Blep<R> {
                 _ => RecvMessage::default(),
             };
             let sender = message_sender.clone();
-            sender.send(payload).expect("send received ble peripheral message failed");
+            sender
+                .send(payload)
+                .expect("send received ble peripheral message failed");
             Ok(())
         });
 
@@ -56,12 +58,20 @@ impl<R: Runtime> Blep<R> {
                 _ => ConnectionStatus::Disconnected,
             };
             let sender = connect_notifier.clone();
-            sender.send(payload).expect("send ble peripheral connection change failed");
+            sender
+                .send(payload)
+                .expect("send ble peripheral connection change failed");
             Ok(())
         });
 
         self.0
-            .run_mobile_plugin("setup", WatchRecvPayload { channel, connect_notifier })
+            .run_mobile_plugin(
+                "setup",
+                WatchRecvPayload {
+                    channel,
+                    connect_notifier,
+                },
+            )
             .map_err(Into::into)
     }
 

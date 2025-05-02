@@ -26,6 +26,7 @@ import com.plugin.blep.WatchArgs
 @InvokeArg
 class WatchArgs {
     lateinit var channel: Channel
+    lateinit var connect_notifier: Channel
 }
 
 @TauriPlugin
@@ -88,7 +89,7 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
     fun setup(invoke: Invoke) {
         var args = invoke.parseArgs(WatchArgs::class.java);
         recvChannel = args.channel
-        connectChannel = args.connectNotifier
+        connectChannel = args.connect_notifier
         checkAndRequestPermissions()
     }
 
@@ -132,11 +133,11 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
                     newState: Int
                 ) {
                     if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                        connectChannel.send(JSObject().apply {
+                        connectChannel?.send(JSObject().apply {
                             put("type", "Disconnected")
                         })
-                    } else if (newState = BluetoothProfile.STATE_CONNECTED) {
-                        connectChannel.send(JSObject().apply {
+                    } else if (newState == BluetoothProfile.STATE_CONNECTED) {
+                        connectChannel?.send(JSObject().apply {
                             put("type", "Connected")
                         })
                     }

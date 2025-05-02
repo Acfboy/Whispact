@@ -80,7 +80,7 @@ impl BLEComm for BLECentral {
                     return Ok(());
                 }
             }
-            if handler.is_connected() == false {
+            if !handler.is_connected() {
                 Err("target peripheral device not found".to_string())
             } else {
                 Ok(())
