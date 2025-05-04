@@ -1,0 +1,6 @@
+<resources>
+    <!-- HCE 服务名称 -->
+    <string name="hce_service_name">Whispact HCE Service</string>
+    <!-- AID 组描述 -->
+    <string name="hce_group_description">Host Card Emulation Service</string>
+</resources>

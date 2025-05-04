@@ -4,13 +4,20 @@ use tauri::{async_runtime, command, AppHandle, Emitter, Manager, Wry};
 use tauri_plugin_blep::{self, BlepExt};
 mod ble;
 use ble::{central::BLECentral, peripheral::BLEPeripheral, BLEComm, Message};
+use tauri_plugin_nfc2::{self, Nfc2Ext};
+use tokio::sync::{mpsc::unbounded_channel, watch};
+use uuid::{uuid, Uuid};
 
 /// 开启 ble 从端广播，并监听收到的消息，收到消息时发送 ble-message-received 事件
 #[command]
 fn start_ble_peripheral(app: AppHandle) -> Result<(), String> {
     let state = app.state::<Mutex<BLEPeripheral<Wry>>>();
     let mut data = state.lock().unwrap();
-    data.setup(app.blep()).map_err(|e| e.to_string())?;
+
+    // for test
+    let uuid = uuid!("0000ffe1-0000-1000-8000-00805f9b34fb");
+
+    data.setup(app.blep(), uuid).map_err(|e| e.to_string())?;
     let rv = data.take_recv();
     let handle = app.clone();
     async_runtime::spawn(async move {
@@ -75,18 +82,63 @@ fn ble_central_send(app: AppHandle, msg: String) -> Result<(), String> {
     Ok(())
 }
 
+/// 仅仅用来测试 nfc。会启动监听 nfc 的事件，发送一个 nfc-new-uuid 事件通知前端读取到的 uuid。
+#[command]
+fn start_reader(app: AppHandle) -> Result<(), String> {
+    let nfc = app.nfc2();
+    let (sd, mut rv) = watch::channel(Uuid::new_v4());
+    let (err_sd, mut err_rv) = unbounded_channel();
+    nfc.init_nfc_reader(sd, err_sd).map_err(|e| e.to_string())?;
+    let app_handle = app.clone();
+    async_runtime::spawn(async move {
+        while rv.changed().await.is_ok() {
+            let uuid = String::from(
+                rv.borrow()
+                    .as_hyphenated()
+                    .encode_lower(&mut Uuid::encode_buffer()),
+            );
+            app_handle
+                .emit("nfc-new-uuid", uuid)
+                .expect("failed to emit nfc readed uuid");
+        }
+    });
+    async_runtime::spawn(async move {
+        while let Some(e) = err_rv.recv().await {
+            app.emit("nfc-error", format!("{e:?}"))
+                .expect("failed to emit nfc readed uuid");
+        }
+    });
+    Ok(())
+}
+
+/// 仅用于测试，随机生成一个 uuid 并设置给卡模拟，然后返回给前端。
+#[command]
+fn set_hce_uuid(app: AppHandle) -> Result<String, String> {
+    let nfc = app.nfc2();
+    let uuid = Uuid::new_v4();
+    let uuid_str = String::from(
+        uuid.as_hyphenated()
+            .encode_lower(&mut Uuid::encode_buffer()),
+    );
+    nfc.set_hce(uuid).map_err(|e| e.to_string())?;
+    Ok(uuid_str)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_blec::init())
         .plugin(tauri_plugin_blep::init())
+        .plugin(tauri_plugin_nfc2::init())
         .invoke_handler(tauri::generate_handler![
             start_ble_peripheral,
             ble_peripheral_send,
             ble_peripheral_wait_connect,
             start_ble_central_with_uuid,
-            ble_central_send
+            ble_central_send,
+            start_reader,
+            set_hce_uuid,
         ])
         .manage(Mutex::new(BLEPeripheral::<Wry>::new()))
         .manage(Mutex::new(BLECentral::new()))

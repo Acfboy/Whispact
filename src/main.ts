@@ -1,4 +1,12 @@
 import { createApp } from "vue";
 import App from "./App.vue";
 
-createApp(App).mount("#app");
+const app = createApp(App);
+
+app.config.errorHandler = (err) => {
+  if (err instanceof Error) {
+    alert("错误：" + err.message);
+  }
+};
+
+app.mount("#app");

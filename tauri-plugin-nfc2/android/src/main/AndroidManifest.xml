@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- ========== 权限声明 ========== -->
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-feature android:name="android.hardware.nfc" android:required="true" />
+
+    <application>
+        <!-- ========== HCE 服务声明 ========== -->
+        <service
+            android:name=".HceService"
+            android:exported="true"
+            android:permission="android.permission.BIND_NFC_SERVICE">
+            
+            <intent-filter>
+                <action android:name="android.nfc.cardemulation.HostApduService" />
+            </intent-filter>
+            
+            <meta-data
+                android:name="android.nfc.cardemulation.host_apdu_service"
+                android:resource="@xml/hce_service" />
+        </service>
+    </application>
+
+</manifest>

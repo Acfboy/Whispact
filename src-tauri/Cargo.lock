@@ -3883,6 +3883,20 @@ dependencies = [
  "tauri-plugin",
  "thiserror 2.0.12",
  "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "tauri-plugin-nfc2"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.12",
+ "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -4680,6 +4694,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-blec",
  "tauri-plugin-blep",
+ "tauri-plugin-nfc2",
  "tauri-plugin-opener",
  "tokio",
  "uuid",

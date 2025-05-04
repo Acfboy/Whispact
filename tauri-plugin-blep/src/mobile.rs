@@ -7,25 +7,19 @@ use tauri::{
 };
 use tokio::sync::mpsc;
 use tokio::sync::watch;
+use uuid::Uuid;
 
 pub use crate::models::*;
 
-#[cfg(target_os = "ios")]
-tauri::ios_plugin_binding!(init_plugin_blep);
-
-// initializes the Kotlin or Swift plugin classes
 pub fn init<R: Runtime, C: DeserializeOwned>(
     _app: &AppHandle<R>,
     api: PluginApi<R, C>,
 ) -> crate::Result<Blep<R>> {
     #[cfg(target_os = "android")]
     let handle = api.register_android_plugin("com.plugin.blep", "BlePeripheralPlugin")?;
-    #[cfg(target_os = "ios")]
-    let handle = api.register_ios_plugin(init_plugin_blep)?;
     Ok(Blep(handle))
 }
 
-/// Access to the blep APIs.
 pub struct Blep<R: Runtime>(PluginHandle<R>);
 
 impl<R: Runtime> Blep<R> {
@@ -35,6 +29,7 @@ impl<R: Runtime> Blep<R> {
         &self,
         message_sender: mpsc::UnboundedSender<RecvMessage>,
         connect_notifier: watch::Sender<ConnectionStatus>,
+        uuid: Uuid,
     ) -> crate::Result<()> {
         // 创建传输消息的 IPC channel，解析收到的消息后用 message_sender 转发。
         let channel = Channel::new(move |event| {
@@ -64,12 +59,17 @@ impl<R: Runtime> Blep<R> {
             Ok(())
         });
 
+        let uuid = String::from(
+            uuid.as_hyphenated()
+                .encode_lower(&mut Uuid::encode_buffer()),
+        );
         self.0
             .run_mobile_plugin(
                 "setup",
                 WatchRecvPayload {
                     channel,
                     connect_notifier,
+                    uuid,
                 },
             )
             .map_err(Into::into)

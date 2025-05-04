@@ -18,6 +18,7 @@ pub struct SendResponse {
 pub struct WatchRecvPayload {
     pub channel: Channel,
     pub connect_notifier: Channel,
+    pub uuid: String,
 }
 
 #[derive(Deserialize)]

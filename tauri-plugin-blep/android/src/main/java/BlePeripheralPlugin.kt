@@ -27,6 +27,7 @@ import com.plugin.blep.WatchArgs
 class WatchArgs {
     lateinit var channel: Channel
     lateinit var connect_notifier: Channel
+    lateinit var uuid: String
 }
 
 @TauriPlugin
@@ -49,6 +50,7 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
     private lateinit var notifyCharacteristic: BluetoothGattCharacteristic
     private var recvChannel: Channel? = null
     private var connectChannel: Channel? = null
+    private var customUuid: String? = null
 
     private val connectedDevice: BluetoothDevice?
         get() = blePeripheral.getConnectedDevices().firstOrNull()
@@ -90,6 +92,7 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
         var args = invoke.parseArgs(WatchArgs::class.java);
         recvChannel = args.channel
         connectChannel = args.connect_notifier
+        customUuid = args.uuid
         checkAndRequestPermissions()
     }
 
@@ -102,7 +105,7 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
         blePeripheral = BlePeripheralUtils(activity).apply {
             init()
             
-            val serviceUuid = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb")
+            val serviceUuid = UUID.fromString(customUuid)
             val characteristicUuid = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb")
             
             addServices(

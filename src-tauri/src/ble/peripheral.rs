@@ -5,6 +5,7 @@ use tauri::Runtime;
 use tauri_plugin_blep::mobile::{Blep, ConnectionStatus, RecvMessage};
 use tokio::sync::mpsc;
 use tokio::sync::watch;
+use uuid::Uuid;
 
 /// 封装 BLE 中外设通信。
 pub struct BLEPeripheral<R: Runtime> {
@@ -35,7 +36,7 @@ impl<R: Runtime> BLEPeripheral<R> {
 
     /// 启动广播。
     /// 如果已经启动，不做任何事。
-    pub fn setup(&mut self, blep: Arc<Blep<R>>) -> tauri_plugin_blep::Result<()> {
+    pub fn setup(&mut self, blep: Arc<Blep<R>>, uuid: Uuid) -> tauri_plugin_blep::Result<()> {
         if self.is_advertize_start {
             return Ok(());
         }
@@ -47,7 +48,7 @@ impl<R: Runtime> BLEPeripheral<R> {
         let (noti_sd, noti_rv) = watch::channel(ConnectionStatus::Disconnected);
         self.connect_watcher = Some(noti_rv);
 
-        blep.setup(sd, noti_sd)?;
+        blep.setup(sd, noti_sd, uuid)?;
 
         self.is_advertize_start = true;
         Ok(())
