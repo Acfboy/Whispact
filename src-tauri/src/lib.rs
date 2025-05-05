@@ -90,7 +90,9 @@ fn start_reader(app: AppHandle) -> Result<(), String> {
     let app_handle = app.clone();
     async_runtime::spawn(async move {
         let nfc = app_handle.nfc2();
-        nfc.init_nfc_reader(sd, err_sd).map_err(|e| e.to_string()).unwrap();
+        nfc.init_nfc_reader(sd, err_sd)
+            .map_err(|e| e.to_string())
+            .unwrap();
     });
     let app_handle = app.clone();
     async_runtime::spawn(async move {
@@ -108,7 +110,8 @@ fn start_reader(app: AppHandle) -> Result<(), String> {
     let app_handle = app.clone();
     async_runtime::spawn(async move {
         while let Some(e) = err_rv.recv().await {
-            app_handle.emit("nfc-error", format!("{e:?}"))
+            app_handle
+                .emit("nfc-error", format!("{e:?}"))
                 .expect("failed to emit nfc readed uuid");
         }
     });
