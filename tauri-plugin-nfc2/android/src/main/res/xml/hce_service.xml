@@ -6,6 +6,6 @@
     <aid-group 
         android:category="other"
         android:description="@string/hce_group_description">
-        <aid-filter android:name="D001020304"/>
+        <aid-filter android:name="F00000000A0101"/>
     </aid-group>
 </host-apdu-service>

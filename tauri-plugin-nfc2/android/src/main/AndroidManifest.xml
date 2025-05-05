@@ -3,22 +3,46 @@
 
     <!-- ========== 权限声明 ========== -->
     <uses-permission android:name="android.permission.NFC" />
+    <!-- 声明设备必须支持 NFC -->
     <uses-feature android:name="android.hardware.nfc" android:required="true" />
 
     <application>
+        <!-- ========== 主 Activity 声明 ========== -->
+        <activity
+            android:name=".MainActivity" 
+            android:exported="true">
+            <!-- 添加 LAUNCHER 入口（如果是主 Activity） -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            
+            <!-- NFC 技术发现 Intent 过滤器 -->
+            <intent-filter>
+                <action android:name="android.nfc.action.TECH_DISCOVERED" />
+            </intent-filter>
+
+            <!-- 指定支持的技术列表 (nfc_tech_filter.xml) -->
+            <meta-data
+                android:name="android.nfc.action.TECH_DISCOVERED"
+                android:resource="@xml/nfc_tech_filter"/>
+        </activity>
+
         <!-- ========== HCE 服务声明 ========== -->
         <service
             android:name=".HceService"
             android:exported="true"
             android:permission="android.permission.BIND_NFC_SERVICE">
             
+            <!-- 修正 action 名称 -->
             <intent-filter>
-                <action android:name="android.nfc.cardemulation.HostApduService" />
+                <action android:name="android.nfc.cardemulation.action.HOST_APDU_SERVICE" />
             </intent-filter>
             
+            <!-- 确保资源文件名与代码一致 (原代码中使用 @xml/apduservice) -->
             <meta-data
                 android:name="android.nfc.cardemulation.host_apdu_service"
-                android:resource="@xml/hce_service" />
+                android:resource="@xml/hce_service" /> 
         </service>
     </application>
 

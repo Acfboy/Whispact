@@ -85,10 +85,13 @@ fn ble_central_send(app: AppHandle, msg: String) -> Result<(), String> {
 /// 仅仅用来测试 nfc。会启动监听 nfc 的事件，发送一个 nfc-new-uuid 事件通知前端读取到的 uuid。
 #[command]
 fn start_reader(app: AppHandle) -> Result<(), String> {
-    let nfc = app.nfc2();
     let (sd, mut rv) = watch::channel(Uuid::new_v4());
     let (err_sd, mut err_rv) = unbounded_channel();
-    nfc.init_nfc_reader(sd, err_sd).map_err(|e| e.to_string())?;
+    let app_handle = app.clone();
+    async_runtime::spawn(async move {
+        let nfc = app_handle.nfc2();
+        nfc.init_nfc_reader(sd, err_sd).map_err(|e| e.to_string()).unwrap();
+    });
     let app_handle = app.clone();
     async_runtime::spawn(async move {
         while rv.changed().await.is_ok() {
@@ -102,9 +105,10 @@ fn start_reader(app: AppHandle) -> Result<(), String> {
                 .expect("failed to emit nfc readed uuid");
         }
     });
+    let app_handle = app.clone();
     async_runtime::spawn(async move {
         while let Some(e) = err_rv.recv().await {
-            app.emit("nfc-error", format!("{e:?}"))
+            app_handle.emit("nfc-error", format!("{e:?}"))
                 .expect("failed to emit nfc readed uuid");
         }
     });

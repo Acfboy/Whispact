@@ -22,11 +22,15 @@ onMounted(async () => {
     await listen<string>('ble-message-received', (event) => {
       bleMessage.value = event.payload;
     });
-    await invoke("start_reader", {});
   } catch (e) {
     alert(e)
   }
 });
+
+async function start_read() {
+  invoke('start_reader', {});
+  alert('invoked');
+}
 
 async function start_peripheral() {
   await invoke("start_ble_peripheral", {});
@@ -54,5 +58,6 @@ async function central_send() {
     <button @click="start_peripheral">START PERIPHERAL</button>
     <input type="text" v-model="sendMessage" />
     <button @click="central_send">CENTRAL SEND</button>
+    <button @click="start_read">START READER</button>
   </main>
 </template>

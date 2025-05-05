@@ -2,10 +2,13 @@ package com.plugin.nfc2
 
 import android.app.Activity
 import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Intent
 import android.content.SharedPreferences
 import android.nfc.*
+import android.nfc.NfcAdapter
 import android.nfc.cardemulation.*
+import android.nfc.cardemulation.CardEmulation
 import android.nfc.tech.IsoDep
 import android.os.Bundle
 import android.util.Log
@@ -23,7 +26,7 @@ class WatchArgs {
 
 @InvokeArg
 class HceConfigArgs {
-    var aid: String = "D001020304"
+    var aid: String = "F00000000A0101"
     var uuid: String = "12345678-1234-5678-1234-567812345678"
 }
 
@@ -31,9 +34,9 @@ class HceConfigArgs {
 class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
     // 状态变量声明
     private var isHceEnabled: Boolean = false
-    private var currentAid: String = "D001020304"
+    private var currentAid: String = "F00000000A0101"
     private var currentUuid: String = "12345678-1234-5678-1234-567812345678"
-    
+
     private val nfcAdapter: NfcAdapter? = NfcAdapter.getDefaultAdapter(activity)
     private var dataChannel: Channel? = null
     private var errorChannel: Channel? = null
@@ -41,10 +44,10 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
 
     private val pendingIntent: PendingIntent by lazy {
         PendingIntent.getActivity(
-            activity,
-            0,
-            Intent(activity, activity.javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
-            PendingIntent.FLAG_MUTABLE
+                activity,
+                0,
+                Intent(activity, activity.javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                PendingIntent.FLAG_MUTABLE
         )
     }
 
@@ -74,17 +77,13 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
         invoke.resolve()
     }
 
-    // region HCE 配置管理
     private fun loadHceConfig() {
-        currentAid = prefs.getString("aid", "D001020304") ?: "D001020304"
+        currentAid = prefs.getString("aid", "F00000000A0101") ?: "F00000000A0101"
         currentUuid = prefs.getString("uuid", "") ?: ""
     }
 
     private fun saveHceConfig() {
-        prefs.edit()
-            .putString("aid", currentAid)
-            .putString("uuid", currentUuid)
-            .apply()
+        prefs.edit().putString("aid", currentAid).putString("uuid", currentUuid).apply()
     }
     // endregion
 
@@ -100,10 +99,10 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
     private fun enableForegroundDispatch() {
         try {
             nfcAdapter?.enableForegroundDispatch(
-                activity,
-                pendingIntent,
-                null,
-                arrayOf(arrayOf(IsoDep::class.java.name))
+                    activity,
+                    pendingIntent,
+                    null,
+                    arrayOf(arrayOf(IsoDep::class.java.name))
             )
         } catch (e: SecurityException) {
             sendError("SECURITY_ERROR", "NFC权限被拒绝: ${e.message}")
@@ -124,62 +123,63 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
     private fun processTag(tag: Tag) {
         IsoDep.get(tag)?.use { isoDep ->
             try {
+                Log.i("handle intent", "start")
                 isoDep.connect()
-                
-                // 1. SELECT AID
-                val selectApdu = "00A40400${currentAid.length/2}${currentAid}".hexToBytes()
+                Log.i("handle intent", "connected")
+                val selectApdu =
+                        "00A40400${String.format("%02X", currentAid.length / 2)}$currentAid".hexToBytes()
                 val selectResponse = isoDep.transceive(selectApdu)
+                Log.i("handle intent", "select aid")
                 if (!isSuccess(selectResponse)) return@use
 
-                // 2. GET UUID
-                val uuidResponse = isoDep.transceive("00CA0000".hexToBytes())
+                val uuidResponse = isoDep.transceive("00CA000".hexToBytes())
                 if (!isSuccess(uuidResponse)) return@use
 
-                // 3. 解析数据
-                val uuid = uuidResponse.copyOfRange(0, uuidResponse.size - 2)
-                    .toHexString()
-                    .insertHyphens()
+                val uuid =
+                        uuidResponse
+                                .copyOfRange(0, uuidResponse.size - 2)
+                                .toHexString()
+                                .insertHyphens()
                 sendData(uuid)
-
             } catch (e: IOException) {
                 sendError("IO_ERROR", "通信失败: ${e.message}")
             }
-        } ?: sendError("TAG_ERROR", "不支持的标签类型")
+        }
+                ?: sendError("TAG_ERROR", "不支持的标签类型")
     }
-    // endregion
 
-    // region 工具方法
     private fun isSuccess(response: ByteArray): Boolean {
+        Log.i("nfc response", response.toHexString())
         return response.size >= 2 &&
                 response[response.size - 2].toInt() == 0x90 &&
                 response[response.size - 1].toInt() == 0x00
     }
 
     private fun sendData(data: String) {
-        dataChannel?.send(JSObject().apply {
-            put("uuid", data)
-        })
+        dataChannel?.send(JSObject().apply { put("uuid", data) })
     }
 
     private fun sendError(code: String, message: String) {
-        errorChannel?.send(JSObject().apply {
-            put("code", code)
-            put("message", message)
-        })
+        errorChannel?.send(
+                JSObject().apply {
+                    put("code", code)
+                    put("message", message)
+                }
+        )
     }
-    // endregion
 }
 
-// region HCE 服务实现
 class HceService : HostApduService() {
     private lateinit var prefs: SharedPreferences
 
     override fun onCreate() {
         super.onCreate()
+        Log.i("crate", "hce create")
         prefs = getSharedPreferences("nfc_plugin", MODE_PRIVATE)
     }
 
     override fun processCommandApdu(commandApdu: ByteArray?, extras: Bundle?): ByteArray {
+        Log.i("hce", "get select aid")
         return when {
             !commandApdu.isSelectAidCommand() -> "6F00".hexToBytes()
             else -> handleValidCommand(commandApdu!!)
@@ -189,7 +189,9 @@ class HceService : HostApduService() {
     private fun handleValidCommand(apdu: ByteArray): ByteArray {
         return when (apdu[1].toInt()) {
             0xA4 -> "9000".hexToBytes()
-            0xCA -> (prefs.getString("uuid", "")!!.replace("-", "").hexToBytes() + "9000".hexToBytes())
+            0xCA ->
+                    (prefs.getString("uuid", "")!!.replace("-", "").hexToBytes() +
+                            "9000".hexToBytes())
             else -> "6F00".hexToBytes()
         }
     }
@@ -205,8 +207,9 @@ class HceService : HostApduService() {
     override fun onDeactivated(reason: Int) {}
 }
 
-// 扩展函数
 private fun String.hexToBytes() = chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+
 private fun ByteArray.toHexString() = joinToString("") { "%02X".format(it) }
-private fun String.insertHyphens() = replace(Regex("(.{8})(.{4})(.{4})(.{4})(.{12})"), "$1-$2-$3-$4-$5")
-// endregion
+
+private fun String.insertHyphens() =
+        replace(Regex("(.{8})(.{4})(.{4})(.{4})(.{12})"), "$1-$2-$3-$4-$5")
