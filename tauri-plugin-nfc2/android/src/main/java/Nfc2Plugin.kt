@@ -2,13 +2,12 @@ package com.plugin.nfc2
 
 import android.app.Activity
 import android.app.PendingIntent
-import android.content.ComponentName
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.IntentFilter
 import android.nfc.*
 import android.nfc.NfcAdapter
 import android.nfc.cardemulation.*
-import android.nfc.cardemulation.CardEmulation
 import android.nfc.tech.IsoDep
 import android.os.Bundle
 import android.util.Log
@@ -85,9 +84,7 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
     private fun saveHceConfig() {
         prefs.edit().putString("aid", currentAid).putString("uuid", currentUuid).apply()
     }
-    // endregion
 
-    // region NFC 读卡逻辑
     private fun checkNfcStatus() {
         when {
             nfcAdapter == null -> sendError("NFC_NOT_SUPPORTED", "设备不支持 NFC")
@@ -98,11 +95,17 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
 
     private fun enableForegroundDispatch() {
         try {
+            val intentFilter = IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED).apply {
+                addCategory(Intent.CATEGORY_DEFAULT)
+            }
+            val filters = arrayOf(intentFilter)
+            val techList = arrayOf(arrayOf(IsoDep::class.java.name)) // 仅处理 ISO-DEP 标签
+
             nfcAdapter?.enableForegroundDispatch(
-                    activity,
-                    pendingIntent,
-                    null,
-                    arrayOf(arrayOf(IsoDep::class.java.name))
+                activity,
+                pendingIntent,
+                filters, 
+                techList
             )
         } catch (e: SecurityException) {
             sendError("SECURITY_ERROR", "NFC权限被拒绝: ${e.message}")
@@ -115,7 +118,7 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
     }
 
     private fun handleNfcIntent(intent: Intent?) {
-        intent?.takeIf { NfcAdapter.ACTION_TECH_DISCOVERED == it.action }?.let {
+        intent?.let {
             processTag(intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)!!)
         }
     }
@@ -132,7 +135,7 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
                 Log.i("handle intent", "select aid")
                 if (!isSuccess(selectResponse)) return@use
 
-                val uuidResponse = isoDep.transceive("00CA000".hexToBytes())
+                val uuidResponse = isoDep.transceive("00CA0000".hexToBytes())
                 if (!isSuccess(uuidResponse)) return@use
 
                 val uuid =
@@ -156,7 +159,7 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
     }
 
     private fun sendData(data: String) {
-        dataChannel?.send(JSObject().apply { put("uuid", data) })
+        dataChannel?.send(JSObject().apply { put("value", data) })
     }
 
     private fun sendError(code: String, message: String) {
@@ -174,34 +177,41 @@ class HceService : HostApduService() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.i("crate", "hce create")
         prefs = getSharedPreferences("nfc_plugin", MODE_PRIVATE)
     }
 
     override fun processCommandApdu(commandApdu: ByteArray?, extras: Bundle?): ByteArray {
-        Log.i("hce", "get select aid")
-        return when {
-            !commandApdu.isSelectAidCommand() -> "6F00".hexToBytes()
-            else -> handleValidCommand(commandApdu!!)
-        }
+        if (commandApdu == null) return "6F00".hexToBytes()
+        return handleValidCommand(commandApdu)
     }
 
     private fun handleValidCommand(apdu: ByteArray): ByteArray {
         return when (apdu[1].toInt()) {
-            0xA4 -> "9000".hexToBytes()
-            0xCA ->
+            0xA4 -> {
+                if (isSelectAidCommand(apdu)) {
+                    "9000".hexToBytes()
+                } else {
+                    "6F00".hexToBytes()
+                }
+            }
+            0xCA -> {
+                if (apdu.size >= 4 && apdu[2] == 0x00.toByte() && apdu[3] == 0x00.toByte()) {
                     (prefs.getString("uuid", "")!!.replace("-", "").hexToBytes() +
                             "9000".hexToBytes())
-            else -> "6F00".hexToBytes()
+                } else {
+                    "6A86".hexToBytes()
+                }
+            }
+            else -> "6D00".hexToBytes()
         }
     }
 
-    private fun ByteArray?.isSelectAidCommand(): Boolean {
-        if (this == null || size < 5) return false
-        return this[0].toInt() == 0x00 &&
-                this[1].toInt() == 0xA4 &&
-                this[2].toInt() == 0x04 &&
-                this[3].toInt() == 0x00
+    private fun isSelectAidCommand(apdu: ByteArray): Boolean {
+        return apdu.size >= 5 &&
+                apdu[0] == 0x00.toByte() &&
+                apdu[1] == 0xA4.toByte() &&
+                apdu[2] == 0x04.toByte() &&
+                apdu[3] == 0x00.toByte()
     }
 
     override fun onDeactivated(reason: Int) {}
