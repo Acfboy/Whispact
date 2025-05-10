@@ -8,6 +8,7 @@ use tauri::{
 use tokio::sync::mpsc;
 use tokio::sync::watch;
 use uuid::Uuid;
+use tauri::plugin::PermissionState;
 
 pub use crate::models::*;
 
@@ -78,6 +79,19 @@ impl<R: Runtime> Blep<R> {
     pub fn send(&self, message: String) -> crate::Result<SendResponse> {
         self.0
             .run_mobile_plugin("send", SendRequest { message })
+            .map_err(Into::into)
+    }
+
+    /// 获得 ble 相关权限
+    pub fn request_bluetooth_permission(&self) -> crate::Result<PermissionState> {
+        self.0
+            .run_mobile_plugin::<PermissionResponse>(
+                "requestPermissions",
+                RequestPermission {
+                    bluetooth: true,
+                },
+            )
+            .map(|r| r.bluetooth)
             .map_err(Into::into)
     }
 }

@@ -166,7 +166,7 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
         errorChannel?.send(
                 JSObject().apply {
                     put("code", code)
-                    put("message", message)
+                    put("data", message)
                 }
         )
     }

@@ -189,7 +189,9 @@ class BlePeripheralUtils(private val context: Context) {
                 }
                 service.addCharacteristic(characteristic)
             }
-            bluetoothGattServer?.addService(service)
+            // bluetoothGattServer?.addService(service)
+            val success = bluetoothGattServer?.addService(service) ?: false
+            Log.i("add service", "$success")
         }
     }
 

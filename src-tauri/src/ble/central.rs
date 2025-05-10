@@ -6,6 +6,7 @@ use tauri_plugin_blec::{
 };
 use tokio::sync::mpsc;
 use uuid::Builder;
+use uuid::Uuid;
 
 /// ble 主端的通信
 pub struct BLECentral {
@@ -43,27 +44,13 @@ impl BLEComm for BLECentral {
         let (noti_sd, noti_rv) = mpsc::unbounded_channel();
         self.receiver = Some(noti_rv);
         async_runtime::block_on(async move {
-            let uuid = Builder::from_bytes(
-                self.uuid
-                    .as_bytes()
-                    .try_into()
-                    .map_err(|e: std::array::TryFromSliceError| e.to_string())?,
-            )
-            .into_uuid();
-            self.handler
-                .subscribe(uuid, move |msg| {
-                    noti_sd
-                        .send(String::from_utf8(msg).expect("received not utf8 string"))
-                        .expect("noti_sd send failed");
-                })
-                .await
-                .map_err(|e| e.to_string())?;
+            let uuid = Uuid::parse_str(&self.uuid).map_err(|e| e.to_string())?;
 
             let (sd, mut rv) = mpsc::channel(100);
             self.handler
                 .discover(Some(sd), 3000, ScanFilter::None)
                 .await
-                .map_err(|e| e.to_string())?;
+                .map_err(|e| "discover: ".to_owned() + &e.to_string())?;
 
             let handler = self.handler;
             let target_uuid = self.uuid.clone();
@@ -76,10 +63,19 @@ impl BLEComm for BLECentral {
                     handler
                         .connect(&device.address, OnDisconnectHandler::None)
                         .await
-                        .map_err(|e| e.to_string())?;
+                        .map_err(|e| "connect".to_owned() + &e.to_string())?;
                     return Ok(());
                 }
             }
+            
+            self.handler
+                .subscribe(uuid, move |msg| {
+                    noti_sd
+                        .send(String::from_utf8(msg).expect("received not utf8 string"))
+                        .expect("noti_sd send failed");
+                })
+                .await
+                .map_err(|e| "subscribe: ".to_owned() + &e.to_string())?;
             if !handler.is_connected() {
                 Err("target peripheral device not found".to_string())
             } else {

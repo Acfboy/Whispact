@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, PermissionState } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
 const hceUuid = ref("");
 const bleMessage = ref("");
 const sendMessage = ref("");
+
+interface Permissions {
+  bluetooth: PermissionState,
+}
 
 async function set_hce() {
   hceUuid.value = await invoke("set_hce_uuid", {});
@@ -33,14 +37,28 @@ async function start_read() {
 }
 
 async function start_peripheral() {
-  await invoke("start_ble_peripheral", {});
+  try {
+    await invoke("start_ble_peripheral", {});
+  } catch (e) {
+    alert(e)
+  }
 }
 
 async function start_central() {
-  await invoke("start_ble_central_with_uuid", { uuid: "0000ffe1-0000-1000-8000-00805f9b34fb" });
-  listen<string>('ble-message-received', (event) => {
-    bleMessage.value = event.payload;
-  });
+  try {
+    await invoke("start_ble_central_with_uuid", { uuid: "0000ffe1-0000-1000-8000-00805f9b34fb" });
+  } catch (e) {
+    alert(e);
+  }
+}
+
+async function blep_permission() {
+  try {
+    const permission = await invoke<PermissionState>('request_blep_bluetooth_permissions')
+    alert(JSON.stringify(permission));
+  } catch (e) {
+    alert(e);
+  }
 }
 
 async function central_send() {
@@ -59,5 +77,6 @@ async function central_send() {
     <input type="text" v-model="sendMessage" />
     <button @click="central_send">CENTRAL SEND</button>
     <button @click="start_read">START READER</button>
+    <button @click="blep_permission">BLEP PERMISSION</button>
   </main>
 </template>
