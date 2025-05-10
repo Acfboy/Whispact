@@ -154,8 +154,8 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
     private fun isSuccess(response: ByteArray): Boolean {
         Log.i("nfc response", response.toHexString())
         return response.size >= 2 &&
-                response[response.size - 2].toInt() == 0x90 &&
-                response[response.size - 1].toInt() == 0x00
+                response[response.size - 2].toInt() and 0xFF == 0x90 &&
+                response[response.size - 1].toInt() and 0xFF == 0x00
     }
 
     private fun sendData(data: String) {
@@ -186,7 +186,7 @@ class HceService : HostApduService() {
     }
 
     private fun handleValidCommand(apdu: ByteArray): ByteArray {
-        return when (apdu[1].toInt()) {
+        return when (apdu[1].toInt() and 0xFF) {
             0xA4 -> {
                 if (isSelectAidCommand(apdu)) {
                     "9000".hexToBytes()
