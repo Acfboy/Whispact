@@ -1,6 +1,6 @@
 use std::sync::Mutex;
 
-use tauri::{async_runtime, command, AppHandle, Emitter, Manager, Wry};
+use tauri::{async_runtime, command, plugin::PermissionState, AppHandle, Emitter, Manager, Wry};
 use tauri_plugin_blep::{self, BlepExt};
 mod ble;
 use ble::{central::BLECentral, peripheral::BLEPeripheral, BLEComm, Message};
@@ -131,6 +131,11 @@ fn set_hce_uuid(app: AppHandle) -> Result<String, String> {
     Ok(uuid_str)
 }
 
+#[command] 
+fn request_blep_bluetooth_permissions(app: AppHandle) -> Result<PermissionState, String> {
+    app.blep().request_bluetooth_permission().map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -146,6 +151,7 @@ pub fn run() {
             ble_central_send,
             start_reader,
             set_hce_uuid,
+            request_blep_bluetooth_permissions
         ])
         .manage(Mutex::new(BLEPeripheral::<Wry>::new()))
         .manage(Mutex::new(BLECentral::new()))

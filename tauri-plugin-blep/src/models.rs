@@ -1,5 +1,18 @@
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Channel;
+use tauri::plugin::PermissionState;
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PermissionResponse {
+    pub bluetooth: PermissionState,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RequestPermission {
+    pub bluetooth: bool,
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
