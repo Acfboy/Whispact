@@ -1,5 +1,6 @@
 use super::{BLEComm, Message};
 use std::sync::Arc;
+use tauri::async_runtime;
 use tauri::async_runtime::block_on;
 use tauri::Runtime;
 use tauri_plugin_blep::mobile::{Blep, ConnectionStatus, RecvMessage};
@@ -36,9 +37,9 @@ impl<R: Runtime> BLEPeripheral<R> {
 
     /// 启动广播。
     /// 如果已经启动，不做任何事。
-    pub fn setup(&mut self, blep: Arc<Blep<R>>, uuid: Uuid) -> tauri_plugin_blep::Result<()> {
+    pub fn setup(&mut self, blep: Arc<Blep<R>>, uuid: Uuid) -> Result<(), String> {
         if self.is_advertize_start {
-            return Ok(());
+            return Err("Already started".to_string());
         }
 
         self.blep = Some(blep.clone());
@@ -48,8 +49,9 @@ impl<R: Runtime> BLEPeripheral<R> {
         let (noti_sd, noti_rv) = watch::channel(ConnectionStatus::Disconnected);
         self.connect_watcher = Some(noti_rv);
 
-        blep.setup(sd, noti_sd, uuid)?;
-
+        async_runtime::spawn(async move {
+            blep.setup(sd, noti_sd, uuid).expect("failed to setup blep");
+        });
         self.is_advertize_start = true;
         Ok(())
     }

@@ -53,11 +53,10 @@ impl BLEComm for BLECentral {
                 .map_err(|e| "discover: ".to_owned() + &e.to_string())?;
 
             let handler = self.handler;
-            let target_uuid = self.uuid.clone();
             while let Some(devices) = rv.recv().await {
                 let target_device = devices
                     .iter()
-                    .find(|&x| x.services.iter().any(|id| id.to_string() == target_uuid));
+                    .find(|&x| x.services.iter().any(|id| id.as_bytes() == uuid.as_bytes()));
                 if let Some(device) = target_device {
                     // TODO: 断连提示
                     handler

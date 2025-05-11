@@ -35,6 +35,7 @@ pub struct WatchRecvPayload {
 }
 
 #[derive(Deserialize)]
+#[serde(tag = "type")]
 pub enum ConnectionStatus {
     Connected,
     Disconnected,

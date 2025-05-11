@@ -7,10 +7,10 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothProfile
+import android.bluetooth.le.AdvertiseCallback
+import android.bluetooth.le.AdvertiseSettings
 import android.content.pm.PackageManager
-import android.os.Build
 import android.util.Log
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
@@ -30,16 +30,27 @@ class WatchArgs {
 }
 
 @TauriPlugin(
-  permissions = [
-    Permission(strings = [Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE, Manifest.permission.BLUETOOTH_SCAN], alias = "bluetooth")
-  ]
+        permissions =
+                [
+                        Permission(
+                                strings =
+                                        [
+                                                Manifest.permission.BLUETOOTH_CONNECT,
+                                                Manifest.permission.BLUETOOTH_ADVERTISE,
+                                                Manifest.permission.BLUETOOTH_SCAN],
+                                alias = "bluetooth"
+                        )]
 )
 class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
 
     companion object {
         private const val PERMISSION_REQUEST_CODE = 123
         private val REQUIRED_PERMISSIONS =
-                mutableListOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE, Manifest.permission.BLUETOOTH_SCAN)
+                mutableListOf(
+                        Manifest.permission.BLUETOOTH_CONNECT,
+                        Manifest.permission.BLUETOOTH_ADVERTISE,
+                        Manifest.permission.BLUETOOTH_SCAN
+                )
     }
 
     private lateinit var blePeripheral: BlePeripheralUtils
@@ -102,32 +113,47 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
                     val serviceUuid = UUID.fromString(customUuid)
                     val characteristicUuid = UUID.fromString(customUuid)
 
-                    addServices(
-                            BlePeripheralUtils.BluetoothGattServiceInfo(
-                                    serviceUuid,
-                                    BluetoothGattService.SERVICE_TYPE_PRIMARY,
-                                    listOf(
-                                            BlePeripheralUtils.BluetoothGattCharacteristicInfo(
-                                                    characteristicUuid,
-                                                    BluetoothGattCharacteristic.PROPERTY_WRITE or
-                                                            BluetoothGattCharacteristic
-                                                                    .PROPERTY_NOTIFY,
-                                                    BluetoothGattCharacteristic.PERMISSION_WRITE,
-                                                    BlePeripheralUtils.BluetoothGattDescriptorInfo(
-                                                            UUID.fromString(
-                                                                    "00002902-0000-1000-8000-00805f9b34fb"
-                                                            ),
-                                                            BluetoothGattDescriptor.PERMISSION_WRITE
+                    callback =
+                            object : AdvertiseCallback() {
+                                override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
+                                    Log.i("ble ad", "BLE advertisement added successfully")
+
+                                    addServices(
+                                            BlePeripheralUtils.BluetoothGattServiceInfo(
+                                                    serviceUuid,
+                                                    BluetoothGattService.SERVICE_TYPE_PRIMARY,
+                                                    listOf(
+                                                            BlePeripheralUtils
+                                                                    .BluetoothGattCharacteristicInfo(
+                                                                            characteristicUuid,
+                                                                            BluetoothGattCharacteristic
+                                                                                    .PROPERTY_WRITE or
+                                                                                    BluetoothGattCharacteristic
+                                                                                            .PROPERTY_NOTIFY,
+                                                                            BluetoothGattCharacteristic
+                                                                                    .PERMISSION_WRITE,
+                                                                            BlePeripheralUtils
+                                                                                    .BluetoothGattDescriptorInfo(
+                                                                                            UUID.fromString(
+                                                                                                    "00002902-0000-1000-8000-00805f9b34fb"
+                                                                                            ),
+                                                                                            BluetoothGattDescriptor
+                                                                                                    .PERMISSION_WRITE
+                                                                                    )
+                                                                    )
                                                     )
                                             )
                                     )
-                            )
-                    )
+                                }
 
-                    // Log.i("ble peri", "service added")
+                                override fun onStartFailure(errorCode: Int) {
+                                    Log.e(
+                                            "ble ad",
+                                            "Failed to add BLE advertisement, reason: $errorCode"
+                                    )
+                                }
+                            }
 
-
-                    // Log.i("ble peri", "notify chara")
                     blePeripheralCallback =
                             object : BlePeripheralUtils.BlePeripheralCallback {
                                 override fun onConnectionStateChange(
@@ -155,25 +181,18 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
                                         offset: Int,
                                         value: ByteArray
                                 ) {
-                                    activity.runOnUiThread {
-                                        try {
-                                            recvChannel?.send(
-                                                    JSObject().apply { put("msg", String(value)) }
-                                            )
-                                        } catch (e: IllegalStateException) {
-                                            recvChannel = null
-                                        }
+                                    try {
+                                        recvChannel?.send(
+                                                JSObject().apply { put("msg", String(value)) }
+                                        )
+                                    } catch (e: IllegalStateException) {
+                                        recvChannel = null
                                     }
                                 }
                             }
 
-                    try {
-                        Log.i("ble per", "start")
-                        startBluetoothLeAdvertiser("TauriBleDevice", byteArrayOf(), serviceUuid)
-                        Log.i("ble per", "started")
-                    } catch (e: SecurityException) {
-                        Log.e("BlePlugin", "Bluetooth operation failed: ${e.message}")
-                    }
+                    startBluetoothLeAdvertiser("TauriBleDevice", byteArrayOf(), serviceUuid)
+                    Log.i("ble per", "started")
                 }
     }
 
@@ -187,7 +206,8 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
         if (!::notifyCharacteristic.isInitialized) {
             var serviceUuid = UUID.fromString(customUuid)
             var characteristicUuid = UUID.fromString(customUuid)
-            notifyCharacteristic = blePeripheral?.getCharacteristic(serviceUuid, characteristicUuid)!!
+            notifyCharacteristic =
+                    blePeripheral?.getCharacteristic(serviceUuid, characteristicUuid)!!
         }
 
         val args = invoke.parseArgs(SendArgs::class.java)

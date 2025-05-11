@@ -7,10 +7,6 @@ const hceUuid = ref("");
 const bleMessage = ref("");
 const sendMessage = ref("");
 
-interface Permissions {
-  bluetooth: PermissionState,
-}
-
 async function set_hce() {
   hceUuid.value = await invoke("set_hce_uuid", {});
 }

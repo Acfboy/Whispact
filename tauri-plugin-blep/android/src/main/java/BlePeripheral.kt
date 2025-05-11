@@ -26,9 +26,9 @@ class BlePeripheralUtils(private val context: Context) {
 
     fun getConnectedDevices(): List<BluetoothDevice> = deviceArrayList.toList()
 
-    private val callback = object : AdvertiseCallback() {
+    var callback = object : AdvertiseCallback() {
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-            Log.d(TAG, "BLE advertisement added successfully")
+            Log.i(TAG, "BLE advertisement added successfully")
         }
 
         override fun onStartFailure(errorCode: Int) {
