@@ -13,13 +13,13 @@ async function set_hce() {
 
 onMounted(async () => {
   try {
-    await listen<string>('nfc-new-uuid', (event) => {
+    await listen<string>('nfc-new-uuid', (event: { payload: any; }) => {
       alert(event.payload);
     });
-    await listen<string>('nfc-error', (event) => {
+    await listen<string>('nfc-error', (event: { payload: string; }) => {
       alert('nfc error: ' + event.payload);
     });
-    await listen<string>('ble-message-received', (event) => {
+    await listen<string>('ble-message-received', (event: { payload: any; }) => {
       bleMessage.value = event.payload;
     });
   } catch (e) {
@@ -67,7 +67,7 @@ async function central_send() {
     <h1>Welcome to Whispact! 这是测试页面。</h1>
     <div>BLE Recv: {{ bleMessage }}</div>
     <div>HCE uuid: {{ hceUuid }}</div>
-    <button @click="set_hce">SET HCE</button>
+    <v-btn> @click="set_hce">SET HCE</v-btn>
     <button @click="start_central"> START CENTRAL</button>
     <button @click="start_peripheral">START PERIPHERAL</button>
     <input type="text" v-model="sendMessage" />

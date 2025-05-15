@@ -1,5 +1,13 @@
 import { createApp } from "vue";
-import App from "./App.vue";
+import 'vuetify/styles'
+import { createVuetify } from 'vuetify'
+import App from './App.vue'
+import { components, directives } from "vuetify/dist/vuetify.js";
+
+const vuetify = createVuetify({
+  components,
+  directives,
+})
 
 const app = createApp(App);
 
@@ -9,4 +17,4 @@ app.config.errorHandler = (err) => {
   }
 };
 
-app.mount("#app");
+createApp(App).use(vuetify).mount('#app')
