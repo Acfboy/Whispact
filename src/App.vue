@@ -13,13 +13,13 @@ async function set_hce() {
 
 onMounted(async () => {
   try {
-    await listen<string>('nfc-new-uuid', (event) => {
+    await listen<string>('nfc-new-uuid', (event: { payload: any; }) => {
       alert(event.payload);
     });
-    await listen<string>('nfc-error', (event) => {
+    await listen<string>('nfc-error', (event: { payload: string; }) => {
       alert('nfc error: ' + event.payload);
     });
-    await listen<string>('ble-message-received', (event) => {
+    await listen<string>('ble-message-received', (event: { payload: any; }) => {
       bleMessage.value = event.payload;
     });
   } catch (e) {
@@ -63,16 +63,41 @@ async function central_send() {
 </script>
 
 <template>
-  <main class="container">
-    <h1>Welcome to Whispact! 这是测试页面。</h1>
-    <div>BLE Recv: {{ bleMessage }}</div>
-    <div>HCE uuid: {{ hceUuid }}</div>
-    <button @click="set_hce">SET HCE</button>
-    <button @click="start_central"> START CENTRAL</button>
-    <button @click="start_peripheral">START PERIPHERAL</button>
-    <input type="text" v-model="sendMessage" />
-    <button @click="central_send">CENTRAL SEND</button>
-    <button @click="start_read">START READER</button>
-    <button @click="blep_permission">BLEP PERMISSION</button>
-  </main>
+  <v-app>
+    <v-main>
+      <main class="container">
+        <h1>Welcome to Whispact! 这是测试页面。</h1>
+        <div>BLE Recv: {{ bleMessage }}</div>
+        <div>HCE uuid: {{ hceUuid }}</div>
+        <button @click="set_hce">SET HCE</button>
+        <button @click="start_central"> START CENTRAL</button>
+        <button @click="start_peripheral">START PERIPHERAL</button>
+        <input type="text" v-model="sendMessage" />
+        <button @click="central_send">CENTRAL SEND</button>
+        <button @click="start_read">START READER</button>
+        <button @click="blep_permission">BLEP PERMISSION</button>
+        <RouterView />
+      </main>
+    </v-main>
+
+    <v-bottom-navigation grow>
+      <v-btn value="seal" to="/seal">
+        <v-icon>mdi-clock-time-four</v-icon>
+        <span>Seal</span>
+      </v-btn>
+
+      <v-btn value="home" to="/home">
+        <v-icon>mdi-home</v-icon>
+        <span>Home</span>
+      </v-btn>
+
+      <v-btn value="settings" to="/settings">
+        <v-icon>mdi-cog</v-icon>
+        <span>Settings</span>
+      </v-btn>
+    </v-bottom-navigation>
+  </v-app>
 </template>
+
+<style >
+</style>
