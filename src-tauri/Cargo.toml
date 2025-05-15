@@ -28,3 +28,5 @@ tauri-plugin-nfc2 = { path = "../tauri-plugin-nfc2" }
 anyhow = "1.0.97"
 tokio = "1.44.2"
 uuid = { version = "1.16.0", features = ["v4"] }
+tauri-plugin-log = "2"
+log = "0.4.27"

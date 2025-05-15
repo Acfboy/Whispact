@@ -1,17 +1,17 @@
 use super::BLEComm;
-use super::Message;
+use tauri_plugin_blep::mobile::Message;
 use tauri::async_runtime;
 use tauri_plugin_blec::{
     self, models::ScanFilter, models::WriteType, Handler, OnDisconnectHandler,
 };
 use tokio::sync::mpsc;
-use uuid::Builder;
 use uuid::Uuid;
+use log;
 
 /// ble 主端的通信
 pub struct BLECentral {
     /// 从端 characteristic 的 uuid
-    uuid: String,
+    uuid: Uuid,
 
     /// tauri_plugin_blec 提供的 handler
     handler: &'static Handler,
@@ -21,30 +21,21 @@ pub struct BLECentral {
 }
 
 impl BLECentral {
-    pub fn new() -> Self {
+    pub fn new(uuid: Uuid) -> Self {
         Self {
-            uuid: String::new(),
+            uuid: uuid, 
             handler: tauri_plugin_blec::get_handler().unwrap(),
             receiver: None,
         }
-    }
-
-    /// 更新 uuid
-    pub fn set_uuid(&mut self, uuid: String) {
-        self.uuid = uuid;
     }
 }
 
 impl BLEComm for BLECentral {
     /// 扫描 3 秒，如果找到和包含指定 uuid 的设备就进行连接，返回成功，否则返回失败。
-    fn connect(&mut self) -> Result<(), String> {
-        if self.uuid.is_empty() {
-            return Err("haven't set uuid".to_string());
-        }
+    fn connect(&mut self) -> Result<mpsc::UnboundedReceiver<Message>, String> {
         let (noti_sd, noti_rv) = mpsc::unbounded_channel();
-        self.receiver = Some(noti_rv);
         async_runtime::block_on(async move {
-            let uuid = Uuid::parse_str(&self.uuid).map_err(|e| e.to_string())?;
+            let uuid = self.uuid.clone();
 
             let (sd, mut rv) = mpsc::channel(100);
             self.handler
@@ -56,21 +47,23 @@ impl BLEComm for BLECentral {
             while let Some(devices) = rv.recv().await {
                 let target_device = devices
                     .iter()
-                    .find(|&x| x.services.iter().any(|id| id.as_bytes() == uuid.as_bytes()));
+                    .find(|&x| x.service_data.iter().any(|(id, _)| id.as_bytes() == uuid.as_bytes()));
+                log::info!("decices: {devices:?}");
                 if let Some(device) = target_device {
                     // TODO: 断连提示
                     handler
                         .connect(&device.address, OnDisconnectHandler::None)
                         .await
                         .map_err(|e| "connect".to_owned() + &e.to_string())?;
-                    return Ok(());
+                    break;
                 }
             }
-            
+
             self.handler
-                .subscribe(uuid, move |msg| {
+                .subscribe(uuid, move |msg: Vec<u8>| {
+                    let msg = serde_json::from_slice::<Message>(&msg);
                     noti_sd
-                        .send(String::from_utf8(msg).expect("received not utf8 string"))
+                        .send(msg.expect("received not utf8 string"))
                         .expect("noti_sd send failed");
                 })
                 .await
@@ -78,37 +71,20 @@ impl BLEComm for BLECentral {
             if !handler.is_connected() {
                 Err("target peripheral device not found".to_string())
             } else {
-                Ok(())
+                Ok(noti_rv)
             }
         })
     }
 
-    /// 向 uuid 发送消息
-    fn send(&self, message: String) -> Result<(), String> {
-        let uuid = self.uuid.clone();
+    /// 向从端发送消息
+    fn send(&self, message: Message) -> Result<(), String> {
         async_runtime::block_on(async move {
-            let uuid = Builder::from_bytes(
-                uuid.as_bytes()
-                    .try_into()
-                    .map_err(|e| format!("invalid uuid {}", e))?,
-            )
-            .into_uuid();
+            let uuid = self.uuid.clone();
             self.handler
-                .send_data(uuid, message.as_bytes(), WriteType::WithoutResponse)
+                .send_data(uuid, message.to_string().as_bytes(), WriteType::WithoutResponse)
                 .await
                 .map_err(|e| e.to_string())
         })
     }
 
-    /// 取走接收器
-    fn take_recv<'a>(&mut self) -> mpsc::UnboundedReceiver<impl super::Message + 'a> {
-        self.receiver.take().unwrap()
-    }
-}
-
-/// 主端直接接收 String
-impl Message for String {
-    fn as_str(&self) -> &str {
-        self.as_str()
-    }
 }

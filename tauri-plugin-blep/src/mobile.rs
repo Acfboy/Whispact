@@ -10,6 +10,7 @@ use tokio::sync::watch;
 use uuid::Uuid;
 use tauri::plugin::PermissionState;
 
+
 pub use crate::models::*;
 
 pub fn init<R: Runtime, C: DeserializeOwned>(
@@ -28,16 +29,16 @@ impl<R: Runtime> Blep<R> {
     /// 传入 message_sender 用于转发收到的信息，connect_notifier 用于转发连接的变化。
     pub fn setup(
         &self,
-        message_sender: mpsc::UnboundedSender<RecvMessage>,
+        message_sender: mpsc::UnboundedSender<Message>,
         connect_notifier: watch::Sender<ConnectionStatus>,
         uuid: Uuid,
     ) -> crate::Result<()> {
         // 创建传输消息的 IPC channel，解析收到的消息后用 message_sender 转发。
         let channel = Channel::new(move |event| {
             let payload = match event {
-                InvokeResponseBody::Json(payload) => serde_json::from_str(&payload)
+                InvokeResponseBody::Json(payload) => serde_json::from_str::<Message>(&payload)
                     .expect("could not deserialize ble peripheral ipc response"),
-                _ => RecvMessage::default(),
+                _ => panic!("Wrong return value from plugin-blep")
             };
             let sender = message_sender.clone();
             sender
