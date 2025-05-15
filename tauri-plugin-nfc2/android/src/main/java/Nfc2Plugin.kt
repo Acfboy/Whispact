@@ -3,8 +3,8 @@ package com.plugin.nfc2
 import android.app.Activity
 import android.app.PendingIntent
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.nfc.*
 import android.nfc.NfcAdapter
 import android.nfc.cardemulation.*
@@ -16,6 +16,7 @@ import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.*
 import java.io.IOException
+import kotlin.random.Random
 
 @InvokeArg
 class WatchArgs {
@@ -26,7 +27,7 @@ class WatchArgs {
 @InvokeArg
 class HceConfigArgs {
     var aid: String = "F00000000A0101"
-    var uuid: String = "12345678-1234-5678-1234-567812345678"
+    var uuid: String = "12345678123456781234567812345678"
 }
 
 @TauriPlugin
@@ -56,6 +57,12 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
         dataChannel = args.dataChannel
         errorChannel = args.errorChannel
         prefs = activity.getSharedPreferences("nfc_plugin", Activity.MODE_PRIVATE)
+        prefs.registerOnSharedPreferenceChangeListener { sharedPreferences, key ->
+            if (key == "be_readed") {
+                val data = sharedPreferences.getString(key, "").substring(0, 16);
+                data?.let { sendData(it) }
+            }
+        }
         loadHceConfig()
         checkNfcStatus()
     }
@@ -95,18 +102,14 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
 
     private fun enableForegroundDispatch() {
         try {
-            val intentFilter = IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED).apply {
-                addCategory(Intent.CATEGORY_DEFAULT)
-            }
+            val intentFilter =
+                    IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED).apply {
+                        addCategory(Intent.CATEGORY_DEFAULT)
+                    }
             val filters = arrayOf(intentFilter)
             val techList = arrayOf(arrayOf(IsoDep::class.java.name)) // 仅处理 ISO-DEP 标签
 
-            nfcAdapter?.enableForegroundDispatch(
-                activity,
-                pendingIntent,
-                filters, 
-                techList
-            )
+            nfcAdapter?.enableForegroundDispatch(activity, pendingIntent, filters, techList)
         } catch (e: SecurityException) {
             sendError("SECURITY_ERROR", "NFC权限被拒绝: ${e.message}")
         }
@@ -118,9 +121,7 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
     }
 
     private fun handleNfcIntent(intent: Intent?) {
-        intent?.let {
-            processTag(intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)!!)
-        }
+        intent?.let { processTag(intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)!!) }
     }
 
     private fun processTag(tag: Tag) {
@@ -135,7 +136,7 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
                 Log.i("handle intent", "select aid")
                 if (!isSuccess(selectResponse)) return@use
 
-                val uuidResponse = isoDep.transceive("00CA0000".hexToBytes())
+                val uuidResponse = isoDep.transceive("00CA0000${currentUuid}".hexToBytes())
                 if (!isSuccess(uuidResponse)) return@use
 
                 val uuid =
@@ -196,6 +197,9 @@ class HceService : HostApduService() {
             }
             0xCA -> {
                 if (apdu.size >= 4 && apdu[2] == 0x00.toByte() && apdu[3] == 0x00.toByte()) {
+                    val randomBytes = Random.nextBytes(60)
+                    val res = "${apdu.toHexString().substring(8)}${randomBytes.toHexString()}"
+                    prefs.edit().putString("be_readed", res).apply()
                     (prefs.getString("uuid", "")!!.replace("-", "").hexToBytes() +
                             "9000".hexToBytes())
                 } else {

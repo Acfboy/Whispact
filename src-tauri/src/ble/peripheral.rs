@@ -6,6 +6,7 @@ use tauri::async_runtime::block_on;
 use tauri_plugin_blep::mobile::{Blep, ConnectionStatus, Message};
 use tokio::sync::watch;
 use uuid::Uuid;
+use crate::error::Error;
 
 /// 封装 BLE 中外设通信。
 pub struct BLEPeripheral {
@@ -52,16 +53,16 @@ impl BLEPeripheral {
 }
 
 impl BLEComm for BLEPeripheral {
-    fn send(&self, msg: Message) -> Result<(), String> {
+    fn send(&self, msg: Message) -> Result<(), Error> {
         let msg = msg.to_string();
         match self.blep.clone() {
             Some(blep) => match block_on(async move { blep.send(msg) }) {
-                Err(s) => Err(s.to_string()),
+                Err(s) => Err(Error::BlePeripheralSendFail(s.to_string())),
                 Ok(ok) => {
                     if ok.success {
                         Ok(())
                     } else {
-                        Err("failed".to_string())
+                        Err(Error::BlePeripheralSendFail("failed".to_string()))
                     }
                 }
             },
@@ -70,7 +71,7 @@ impl BLEComm for BLEPeripheral {
     }
 
     /// 阻塞直到连接成功。如果没有初始化，则 panic
-    fn connect(&mut self) -> Result<mpsc::UnboundedReceiver<Message>, String> {
+    fn connect(&mut self) -> Result<mpsc::UnboundedReceiver<Message>, Error> {
         if let Some(watcher) = &mut self.connect_watcher {
             if let ConnectionStatus::Disconnected = *watcher.borrow() {
                 let mut watcher_1 = watcher.clone();
@@ -80,7 +81,7 @@ impl BLEComm for BLEPeripheral {
             }
             Ok(self.recv_msg_receiver.take().unwrap())
         } else {
-            panic!("connect before setup");
+            Err(Error::ConnectBeforeSetup)
         }
     }
 }

@@ -69,7 +69,7 @@ impl<R: Runtime> Nfc2<R> {
     ///
     /// 即使应用没有在运行，只要 nfc 开启，就会启动卡模拟，所以卡模拟无需启动，只是设置将被传递的 uuid。
     pub fn set_hce(&self, uuid: Uuid) -> crate::Result<()> {
-        let uuid = String::from(uuid.hyphenated().encode_lower(&mut Uuid::encode_buffer()));
+        let uuid = String::from(uuid.simple().encode_upper(&mut Uuid::encode_buffer()));
         self.0
             .run_mobile_plugin("startHce", HceRequest { uuid })
             .map_err(Into::into)

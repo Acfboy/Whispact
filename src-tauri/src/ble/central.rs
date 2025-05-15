@@ -7,6 +7,7 @@ use tauri_plugin_blec::{
 use tokio::sync::mpsc;
 use uuid::Uuid;
 use log;
+use crate::error::Error;
 
 /// ble 主端的通信
 pub struct BLECentral {
@@ -15,9 +16,6 @@ pub struct BLECentral {
 
     /// tauri_plugin_blec 提供的 handler
     handler: &'static Handler,
-
-    /// 转发从端 notify，即发来消息，的 receiver
-    receiver: Option<mpsc::UnboundedReceiver<String>>,
 }
 
 impl BLECentral {
@@ -25,14 +23,13 @@ impl BLECentral {
         Self {
             uuid: uuid, 
             handler: tauri_plugin_blec::get_handler().unwrap(),
-            receiver: None,
         }
     }
 }
 
 impl BLEComm for BLECentral {
     /// 扫描 3 秒，如果找到和包含指定 uuid 的设备就进行连接，返回成功，否则返回失败。
-    fn connect(&mut self) -> Result<mpsc::UnboundedReceiver<Message>, String> {
+    fn connect(&mut self) -> Result<mpsc::UnboundedReceiver<Message>, Error> {
         let (noti_sd, noti_rv) = mpsc::unbounded_channel();
         async_runtime::block_on(async move {
             let uuid = self.uuid.clone();
@@ -41,7 +38,7 @@ impl BLEComm for BLECentral {
             self.handler
                 .discover(Some(sd), 3000, ScanFilter::None)
                 .await
-                .map_err(|e| "discover: ".to_owned() + &e.to_string())?;
+                .map_err(|e| Error::BleCentralDiscoverError(e.to_string()))?;
 
             let handler = self.handler;
             while let Some(devices) = rv.recv().await {
@@ -54,7 +51,7 @@ impl BLEComm for BLECentral {
                     handler
                         .connect(&device.address, OnDisconnectHandler::None)
                         .await
-                        .map_err(|e| "connect".to_owned() + &e.to_string())?;
+                        .map_err(|e| Error::BleCentralConnectError(e.to_string()))?;
                     break;
                 }
             }
@@ -67,9 +64,9 @@ impl BLEComm for BLECentral {
                         .expect("noti_sd send failed");
                 })
                 .await
-                .map_err(|e| "subscribe: ".to_owned() + &e.to_string())?;
+                .map_err(|e| Error::BleCentralSubscribeError(e.to_string()))?;
             if !handler.is_connected() {
-                Err("target peripheral device not found".to_string())
+                Err(Error::BleCentralDeviceNotFound)
             } else {
                 Ok(noti_rv)
             }
@@ -77,13 +74,13 @@ impl BLEComm for BLECentral {
     }
 
     /// 向从端发送消息
-    fn send(&self, message: Message) -> Result<(), String> {
+    fn send(&self, message: Message) -> Result<(), Error> {
         async_runtime::block_on(async move {
             let uuid = self.uuid.clone();
             self.handler
                 .send_data(uuid, message.to_string().as_bytes(), WriteType::WithoutResponse)
                 .await
-                .map_err(|e| e.to_string())
+                .map_err(|e| Error::BleCenteralSendDataFailed(e.to_string()))
         })
     }
 

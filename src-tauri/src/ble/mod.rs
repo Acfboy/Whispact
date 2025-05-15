@@ -8,16 +8,17 @@ use tauri::{async_runtime, AppHandle, Emitter, Wry};
 use tauri_plugin_blep::mobile::{Blep, Message};
 use tokio::sync::mpsc;
 use uuid::Uuid;
+use crate::error::Error;
 
 // type IMessage = impl Message;
 /// BLE 通信的主从端都会实现的 trait
 pub trait BLEComm {
     /// 发送一条信息
-    fn send(&self, message: Message) -> Result<(), String>;
+    fn send(&self, message: Message) -> Result<(), Error>;
 
     /// 阻塞直到连接完成，返回接收器。
     /// 用于在触碰后等待连接。
-    fn connect(&mut self) -> Result<mpsc::UnboundedReceiver<Message>, String>;
+    fn connect(&mut self) -> Result<mpsc::UnboundedReceiver<Message>, Error>;
 }
 
 pub struct DeviceBridge {
@@ -39,7 +40,7 @@ impl DeviceBridge {
 
     /// 连接上另一条设备，根据 uuid 决定自己应该是主端还是从端
     /// - 这里规定大的作为主端，小的作为从端。
-    pub fn connect(&mut self, uuid: Uuid, blep: Arc<Blep<Wry>>) -> Result<(), String> {
+    pub fn connect(&mut self, uuid: Uuid, blep: Arc<Blep<Wry>>) -> Result<(), Error> {
         self.communicater = if self.uuid.as_u128() > uuid.as_u128() {
             let commu = BLECentral::new(uuid);
             Some(Box::new(commu))
@@ -57,9 +58,9 @@ impl DeviceBridge {
     }
 
     /// 设置事件发生器，向前端发送收到信号事件
-    pub fn set_emmiter(&mut self, handle: AppHandle) -> Result<(), String> {
+    pub fn set_emmiter(&mut self, handle: AppHandle) -> Result<(), Error> {
         let mut rx = if self.message_rx.is_none() {
-            return Err("Have not connected!".to_string());
+            return Err(Error::ReceiveBeforeConnect);
         } else {
             self.message_rx.take().unwrap()
         };
@@ -79,20 +80,20 @@ impl DeviceBridge {
         Ok(())
     }
 
-    pub fn set_msg(&mut self, msg: Message) -> Result<(), String>{
+    pub fn set_msg(&mut self, msg: Message) -> Result<(), Error>{
         if self.next_msg.is_some() {
-            return Err("last message haven't sent".to_string());
+            return Err(Error::LastMessageNotSend);
         }
         self.next_msg = Some(msg);
         Ok(())
     }  
 
-    pub fn send(&mut self) -> Result<(), String> {
+    pub fn send(&mut self) -> Result<(), Error> {
         if self.next_msg.is_none() {
             return Ok(());
         }
         if self.communicater.is_none() {
-            return Err("not connected".to_string());
+            return Err(Error::SendBeforeConnect);
         }
         self.communicater.as_mut().unwrap().send(self.next_msg.take().unwrap())?;
         Ok(())
