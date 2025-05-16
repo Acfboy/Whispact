@@ -22,6 +22,7 @@ import kotlin.random.Random
 class WatchArgs {
     lateinit var dataChannel: Channel
     lateinit var errorChannel: Channel
+    lateinit var uuid: String
 }
 
 @InvokeArg
@@ -56,37 +57,21 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
         val args = invoke.parseArgs(WatchArgs::class.java)
         dataChannel = args.dataChannel
         errorChannel = args.errorChannel
+        currentUuid = args.uuid
         prefs = activity.getSharedPreferences("nfc_plugin", Activity.MODE_PRIVATE)
+        saveHceConfig()
         prefs.registerOnSharedPreferenceChangeListener { sharedPreferences, key ->
             if (key == "be_readed") {
                 val data = sharedPreferences.getString(key, "")!!.substring(0, 16);
                 data?.let { sendData(it) }
             }
         }
-        loadHceConfig()
         checkNfcStatus()
     }
-
-    @Command
-    fun startHce(invoke: Invoke) {
-        val args = invoke.parseArgs(HceConfigArgs::class.java)
-        currentAid = args.aid
-        currentUuid = args.uuid
-        Log.i("start hce", "${currentUuid}")
-        isHceEnabled = true
-        saveHceConfig()
-        invoke.resolve()
-    }
-
     @Command
     fun stopHce(invoke: Invoke) {
         isHceEnabled = false
         invoke.resolve()
-    }
-
-    private fun loadHceConfig() {
-        currentAid = prefs.getString("aid", "F00000000A0101") ?: "F00000000A0101"
-        currentUuid = prefs.getString("uuid", "") ?: ""
     }
 
     private fun saveHceConfig() {

@@ -1,4 +1,11 @@
 <template>
+  <div>
+    <v-text-field
+      :rules="rules"
+      hide-details="auto"
+      label="请输入消息"
+    ></v-text-field>
+  </div>
     <v-container fluid>
       <v-input
         v-model="message"

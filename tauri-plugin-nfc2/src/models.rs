@@ -12,6 +12,7 @@ pub struct UuidResponse {
 pub struct NfcRequest {
     pub error_channel: Channel,
     pub data_channel: Channel,
+    pub uuid: String,
 }
 
 #[derive(Clone, Serialize)]
