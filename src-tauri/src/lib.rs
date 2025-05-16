@@ -15,13 +15,13 @@ use uuid::Uuid;
 /// # Note
 /// - 被读的设备读到读卡的设备的 uuid 也是通过 reader 提供的 channel 来返回的。
 /// - 注册向前端发送接收到的事件是在 connect 里，所以在这里也注册了。
-fn start_reader(app: AppHandle) -> Result<(), Error> {
+fn start_reader(app: AppHandle, uuid: Uuid) -> Result<(), Error> {
     let (sd, mut rv) = watch::channel(Uuid::new_v4());
     let (err_sd, mut err_rv) = unbounded_channel();
     let app_handle = app.clone();
     async_runtime::spawn(async move {
         let nfc = app_handle.nfc2();
-        nfc.init_nfc_reader(sd, err_sd).unwrap_or_else(|e| {
+        nfc.init_nfc_reader(sd, err_sd, uuid).unwrap_or_else(|e| {
             app_handle
                 .emit("err", Error::InitNfc(e.to_string()))
                 .unwrap();
@@ -86,16 +86,10 @@ pub fn run() {
             set_disposable_msg,
         ])
         .setup(|app| {
-            start_reader(app.handle().clone()).unwrap_or_else(|e| {
+            let bridge = DeviceBridge::new();
+            start_reader(app.handle().clone(), bridge.uuid).unwrap_or_else(|e| {
                 app.emit("err", e).unwrap();
             });
-            let bridge = DeviceBridge::new();
-            let nfc = app.nfc2();
-            nfc.set_hce(bridge.uuid)
-                .map_err(|e| Error::SetHce(e.to_string()))
-                .unwrap_or_else(|e| {
-                    app.emit("err", e).unwrap();
-                });
             app.manage(Mutex::new(bridge));
             Ok(())
         })
