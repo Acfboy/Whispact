@@ -5,7 +5,11 @@ import { listen } from "@tauri-apps/api/event";
 
 
 async function setDisposableMsg() {
-  await invoke("set_disposable_msg", { msg: "Hello World!" });
+  try {
+    await invoke("set_disposable_msg", { msg: "Hello World!" });
+  } catch (e) {
+    alert(e)
+  }
 }
 
 onMounted(async () => {
