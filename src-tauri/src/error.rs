@@ -2,9 +2,9 @@ use serde::Serialize;
 
 #[derive(Debug, Serialize, Clone)]
 pub enum Error {
-    BleCentralDiscoverError(String),
-    BleCentralConnectError(String),
-    BleCentralSubscribeError(String),
+    BleCentralDiscover(String),
+    BleCentralConnect(String),
+    BleCentralSubscribe(String),
     BleCentralDeviceNotFound,
     BleCenteralSendDataFailed(String),
     LastMessageNotSend,
@@ -12,7 +12,7 @@ pub enum Error {
     ReceiveBeforeConnect,
     ConnectBeforeSetup,
     BlePeripheralSendFail(String),
-    SetHceError(String),
-    RequestBlueToothError(String),
-    InitNfcError(String),
+    SetHce(String),
+    RequestBlueTooth(String),
+    InitNfc(String),
 }

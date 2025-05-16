@@ -59,7 +59,7 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
         prefs = activity.getSharedPreferences("nfc_plugin", Activity.MODE_PRIVATE)
         prefs.registerOnSharedPreferenceChangeListener { sharedPreferences, key ->
             if (key == "be_readed") {
-                val data = sharedPreferences.getString(key, "").substring(0, 16);
+                val data = sharedPreferences.getString(key, "")!!.substring(0, 16);
                 data?.let { sendData(it) }
             }
         }

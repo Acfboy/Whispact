@@ -5,6 +5,7 @@ use tauri_plugin_blep::{self, BlepExt};
 mod ble;
 use ble::DeviceBridge;
 use error::Error;
+use tauri_plugin_blep::mobile::Message;
 use tauri_plugin_nfc2::{self, Nfc2Ext};
 use tokio::sync::{mpsc::unbounded_channel, watch};
 use uuid::Uuid;
@@ -22,26 +23,30 @@ fn start_reader(app: AppHandle) -> Result<(), Error> {
         let nfc = app_handle.nfc2();
         nfc.init_nfc_reader(sd, err_sd).unwrap_or_else(|e| {
             app_handle
-                .emit("err", Error::InitNfcError(e.to_string()))
+                .emit("err", Error::InitNfc(e.to_string()))
                 .unwrap();
         });
     });
+
     let app_handle = app.clone();
     async_runtime::spawn(async move {
         while rv.changed().await.is_ok() {
-            let uuid = rv.borrow().clone();
+            let uuid = *rv.borrow();
             let state = app_handle.state::<Mutex<DeviceBridge>>();
             let mut guard = state.lock().unwrap();
-            (*guard)
-                .connect(uuid, app_handle.blep())
-                .unwrap_or_else(|e| {
-                    app_handle.emit("err", e).unwrap();
-                });
+            if (*guard).is_connected() {
+                (*guard)
+                    .connect(uuid, app_handle.blep(), app_handle.clone())
+                    .unwrap_or_else(|e| {
+                        app_handle.emit("err", e).unwrap();
+                    });
+            }
             (*guard).send().unwrap_or_else(|e| {
                 app_handle.emit("err", e).unwrap();
             });
         }
     });
+
     let app_handle = app.clone();
     async_runtime::spawn(async move {
         while let Some(e) = err_rv.recv().await {
@@ -58,7 +63,7 @@ fn start_reader(app: AppHandle) -> Result<(), Error> {
 fn set_hce_uuid(app: AppHandle) -> Result<String, Error> {
     let state = app.state::<Mutex<DeviceBridge>>();
     let guard = state.lock().unwrap();
-    let uuid = (*guard).uuid;
+    let uuid = guard.uuid;
     drop(guard);
     let nfc = app.nfc2();
     let uuid_str = String::from(
@@ -66,7 +71,7 @@ fn set_hce_uuid(app: AppHandle) -> Result<String, Error> {
             .encode_lower(&mut Uuid::encode_buffer()),
     );
     nfc.set_hce(uuid)
-        .map_err(|e| Error::SetHceError(e.to_string()))?;
+        .map_err(|e| Error::SetHce(e.to_string()))?;
     Ok(uuid_str)
 }
 
@@ -74,7 +79,15 @@ fn set_hce_uuid(app: AppHandle) -> Result<String, Error> {
 fn request_blep_bluetooth_permissions(app: AppHandle) -> Result<PermissionState, Error> {
     app.blep()
         .request_bluetooth_permission()
-        .map_err(|e| Error::RequestBlueToothError(e.to_string()))
+        .map_err(|e| Error::RequestBlueTooth(e.to_string()))
+}
+
+#[command]
+fn set_disposable_msg(app: AppHandle, msg: String) -> Result<(), Error> {
+    let state = app.state::<Mutex<DeviceBridge>>();
+    let mut guard = state.lock().unwrap();
+    (*guard).set_msg(Message::Disposable(msg))?;
+    Ok(())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -88,7 +101,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             start_reader,
             set_hce_uuid,
-            request_blep_bluetooth_permissions
+            request_blep_bluetooth_permissions,
+            set_disposable_msg,
         ])
         .manage(Mutex::new(DeviceBridge::new()))
         .run(tauri::generate_context!())

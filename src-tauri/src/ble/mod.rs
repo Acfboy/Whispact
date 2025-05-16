@@ -2,23 +2,24 @@ pub mod central;
 pub mod peripheral;
 use std::sync::Arc;
 
+use crate::error::Error;
 use central::BLECentral;
 use peripheral::BLEPeripheral;
+use std::cmp::Ordering::*;
 use tauri::{async_runtime, AppHandle, Emitter, Wry};
 use tauri_plugin_blep::mobile::{Blep, Message};
 use tokio::sync::mpsc;
 use uuid::Uuid;
-use crate::error::Error;
 
-// type IMessage = impl Message;
 /// BLE 通信的主从端都会实现的 trait
 pub trait BLEComm {
-    /// 发送一条信息
     fn send(&self, message: Message) -> Result<(), Error>;
 
     /// 阻塞直到连接完成，返回接收器。
     /// 用于在触碰后等待连接。
     fn connect(&mut self) -> Result<mpsc::UnboundedReceiver<Message>, Error>;
+
+    fn is_connected(&self) -> bool;
 }
 
 pub struct DeviceBridge {
@@ -38,22 +39,33 @@ impl DeviceBridge {
         }
     }
 
-    /// 连接上另一条设备，根据 uuid 决定自己应该是主端还是从端
+    /// 连接上另一条设备，根据 uuid 决定自己应该是主端还是从端，然后设置事件监听转发到前端
     /// - 这里规定大的作为主端，小的作为从端。
-    pub fn connect(&mut self, uuid: Uuid, blep: Arc<Blep<Wry>>) -> Result<(), Error> {
-        self.communicater = if self.uuid.as_u128() > uuid.as_u128() {
-            let commu = BLECentral::new(uuid);
-            Some(Box::new(commu))
-        } else if self.uuid.as_u128() < uuid.as_u128() {
-            let mut commu = BLEPeripheral::new();
-            commu.setup(blep, self.uuid);
-            Some(Box::new(commu))
-        } else {
-            panic!("How lucky you are! There is only 1e-36 possibility to get the same uuid!");
+    pub fn connect(
+        &mut self,
+        uuid: Uuid,
+        blep: Arc<Blep<Wry>>,
+        handle: AppHandle,
+    ) -> Result<(), Error> {
+        self.communicater = match self.uuid.as_u128().cmp(&uuid.as_u128()) {
+            Greater => {
+                let commu = BLECentral::new(uuid);
+                Some(Box::new(commu))
+            }
+            Less => {
+                let mut commu = BLEPeripheral::new();
+                commu.setup(blep, self.uuid);
+                Some(Box::new(commu))
+            }
+            Equal => {
+                panic!("How lucky you are! There is only 1e-36 possibility to get the same uuid!");
+            }
         };
 
         let rx = Some(self.communicater.as_mut().unwrap().connect()?);
         self.message_rx = rx;
+
+        self.set_emmiter(handle)?;
         Ok(())
     }
 
@@ -74,19 +86,20 @@ impl DeviceBridge {
                     Message::PlanSync(p) => handle.emit("recv-plan-sync", p),
                     Message::DiffPlan => handle.emit("err-diff-plan", ()),
                     Message::DiffSeal => handle.emit("err-diff-seal", ()),
-                }.expect("failed to send msg to frontend");
+                }
+                .expect("failed to send msg to frontend");
             }
         });
         Ok(())
     }
 
-    pub fn set_msg(&mut self, msg: Message) -> Result<(), Error>{
+    pub fn set_msg(&mut self, msg: Message) -> Result<(), Error> {
         if self.next_msg.is_some() {
             return Err(Error::LastMessageNotSend);
         }
         self.next_msg = Some(msg);
         Ok(())
-    }  
+    }
 
     pub fn send(&mut self) -> Result<(), Error> {
         if self.next_msg.is_none() {
@@ -95,7 +108,17 @@ impl DeviceBridge {
         if self.communicater.is_none() {
             return Err(Error::SendBeforeConnect);
         }
-        self.communicater.as_mut().unwrap().send(self.next_msg.take().unwrap())?;
+        self.communicater
+            .as_mut()
+            .unwrap()
+            .send(self.next_msg.take().unwrap())?;
         Ok(())
+    }
+
+    pub fn is_connected(&self) -> bool {
+        match &self.communicater {
+            None => false,
+            Some(c) => c.is_connected(),
+        }
     }
 }

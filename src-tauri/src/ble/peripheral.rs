@@ -1,12 +1,12 @@
 use super::BLEComm;
-use tokio::sync::mpsc;
+use crate::error::Error;
 use std::sync::Arc;
-use tauri::{async_runtime, Wry};
 use tauri::async_runtime::block_on;
+use tauri::{async_runtime, Wry};
 use tauri_plugin_blep::mobile::{Blep, ConnectionStatus, Message};
+use tokio::sync::mpsc;
 use tokio::sync::watch;
 use uuid::Uuid;
-use crate::error::Error;
 
 /// 封装 BLE 中外设通信。
 pub struct BLEPeripheral {
@@ -82,6 +82,17 @@ impl BLEComm for BLEPeripheral {
             Ok(self.recv_msg_receiver.take().unwrap())
         } else {
             Err(Error::ConnectBeforeSetup)
+        }
+    }
+
+    fn is_connected(&self) -> bool {
+        if self.connect_watcher.is_none() {
+            false
+        } else {
+            matches!(
+                *(self.connect_watcher.as_ref().unwrap().borrow()),
+                ConnectionStatus::Connected
+            )
         }
     }
 }

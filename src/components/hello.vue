@@ -3,8 +3,7 @@
 </template>
 
 <script lang="ts">
-import { invoke } from "@tauri-apps/api/core";
-import { defineComponent, onMounted, ref } from "vue";
+import { defineComponent } from "vue";
 
 export default defineComponent({
     name: "MapComponent",

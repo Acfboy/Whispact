@@ -46,7 +46,7 @@ pub enum ConnectionStatus {
 #[derive(Clone, Serialize, Deserialize)]
 pub enum Message {
     /// 一次性消息
-    Disposable(String), 
+    Disposable(String),
     /// 背对背消息
     BackToBack(String),
     /// 打卡“保存这一刻”
@@ -56,14 +56,14 @@ pub enum Message {
     /// 打卡完成共同计划，同步后只需要传一个 uuid
     PlanCheck(Uuid),
     /// 两人填写的保存这一刻不同
-    DiffSeal, 
+    DiffSeal,
     /// 两人想完成的计划不同
-    DiffPlan
+    DiffPlan,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Plan {
-    id: Uuid, 
+    id: Uuid,
     plan: String,
 }
 

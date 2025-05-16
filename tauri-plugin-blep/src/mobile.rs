@@ -1,5 +1,6 @@
 use serde::de::DeserializeOwned;
 use serde_json;
+use tauri::plugin::PermissionState;
 use tauri::{
     ipc::{Channel, InvokeResponseBody},
     plugin::{PluginApi, PluginHandle},
@@ -8,8 +9,6 @@ use tauri::{
 use tokio::sync::mpsc;
 use tokio::sync::watch;
 use uuid::Uuid;
-use tauri::plugin::PermissionState;
-
 
 pub use crate::models::*;
 
@@ -38,7 +37,7 @@ impl<R: Runtime> Blep<R> {
             let payload = match event {
                 InvokeResponseBody::Json(payload) => serde_json::from_str::<Message>(&payload)
                     .expect("could not deserialize ble peripheral ipc response"),
-                _ => panic!("Wrong return value from plugin-blep")
+                _ => panic!("Wrong return value from plugin-blep"),
             };
             let sender = message_sender.clone();
             sender
@@ -88,9 +87,7 @@ impl<R: Runtime> Blep<R> {
         self.0
             .run_mobile_plugin::<PermissionResponse>(
                 "requestPermissions",
-                RequestPermission {
-                    bluetooth: true,
-                },
+                RequestPermission { bluetooth: true },
             )
             .map(|r| r.bluetooth)
             .map_err(Into::into)
