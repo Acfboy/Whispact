@@ -1,5 +1,8 @@
 import { createRouter, createWebHashHistory } from "vue-router";
-import MapComponent from "../components/hello.vue";
+import HomePage from "../views/HomePage.vue";
+import SealPage from "../views/SealPage.vue";
+import SettingPage from "../views/SettingPage.vue";
+import Disposable from "../components/disposable.vue";
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -11,17 +14,22 @@ const router = createRouter({
     {
       path: "/home",
       name: "Home",
-      component: MapComponent,
+      component: HomePage,
     },
     {
       path: "/settings",
       name: "Settings",
-      component: MapComponent,
+      component: SettingPage,
     },
     {
       path: "/seal",
       name: "Seal",
-      component: MapComponent,
+      component: SealPage,
+    },
+    {
+      path: "/disposable",
+      name: "disposable",
+      component: Disposable,
     },
   ],
 });

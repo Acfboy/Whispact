@@ -3,21 +3,27 @@ import { onMounted } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
-
 async function setDisposableMsg() {
-  await invoke("set_disposable_msg", { msg: "Hello World!" });
+  try {
+    await invoke("set_disposable_msg", { msg: "Hello World!" });
+  } catch (e) {
+    alert(e);
+  }
 }
 
 onMounted(async () => {
   try {
-    await listen<string>('recv-disposable-msg', (event: { payload: string; }) => {
-      alert(event.payload);
-    });
-    await listen<string>('err', (event: { payload: string; }) => {
-      alert('error: ' + event.payload);
+    await listen<string>(
+      "recv-disposable-msg",
+      (event: { payload: string }) => {
+        alert(event.payload);
+      }
+    );
+    await listen<string>("err", (event: { payload: string }) => {
+      alert("error: " + event.payload);
     });
   } catch (e) {
-    alert(e)
+    alert(e);
   }
 });
 </script>
@@ -28,6 +34,7 @@ onMounted(async () => {
       <main class="container">
         <h1>Welcome to Whispact! 这是测试页面。</h1>
         <v-btn @click="setDisposableMsg">测试消息</v-btn>
+        <router-view />
       </main>
     </v-main>
 
