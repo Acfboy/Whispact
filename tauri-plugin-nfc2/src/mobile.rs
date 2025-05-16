@@ -1,3 +1,4 @@
+use crate::error::Error;
 use serde::de::DeserializeOwned;
 use tauri::{
     ipc::{Channel, InvokeResponseBody},
@@ -21,13 +22,14 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 pub struct Nfc2<R: Runtime>(PluginHandle<R>);
 
 impl<R: Runtime> Nfc2<R> {
-    /// 初始化 nfc 读卡器。
+    /// 初始化 nfc 读卡器，并设置 uuid。
     /// - `uuid_sender`: 一个 watch 的 sender，内部值是最后一次 nfc 读到的对方 uuid。
     /// - `error_sender`: 用于发送错误信息，错误信息可能有 NFC_NOT_SUPPORTED, NFC_DISABLED, SECURITY_ERROR, TAG_ERROR, IO_ERROR。
     pub fn init_nfc_reader(
         &self,
         uuid_sender: watch::Sender<Uuid>,
         error_sender: mpsc::UnboundedSender<NfcErrorResponse>,
+        uuid: Uuid
     ) -> crate::Result<()> {
         let data_channel = Channel::new(move |event| {
             let payload = if let InvokeResponseBody::Json(payload) = event {
@@ -35,7 +37,9 @@ impl<R: Runtime> Nfc2<R> {
             } else {
                 UuidResponse::default()
             };
-            let payload = Uuid::parse_str(&payload.value).expect("received invalid uuid");
+            let payload = Uuid::parse_str(&payload.value)
+                .map_err(|_| Error::InvalidCard)
+                .map_err(Into::<tauri::Error>::into)?;
             uuid_sender
                 .send(payload)
                 .expect("send received nfc message failed");
@@ -54,7 +58,7 @@ impl<R: Runtime> Nfc2<R> {
             Ok(())
         });
 
-        self.0
+        let res = self.0
             .run_mobile_plugin(
                 "init",
                 NfcRequest {
@@ -62,13 +66,19 @@ impl<R: Runtime> Nfc2<R> {
                     error_channel,
                 },
             )
-            .map_err(Into::into)
+            .map_err(Into::into);
+        if res.is_ok() {
+            self.set_hce(uuid)
+        } else {
+            res
+        }
+     
     }
 
     /// 设置模拟卡传递的 uuid。
     ///
     /// 即使应用没有在运行，只要 nfc 开启，就会启动卡模拟，所以卡模拟无需启动，只是设置将被传递的 uuid。
-    pub fn set_hce(&self, uuid: Uuid) -> crate::Result<()> {
+    fn set_hce(&self, uuid: Uuid) -> crate::Result<()> {
         let uuid = String::from(uuid.simple().encode_upper(&mut Uuid::encode_buffer()));
         self.0
             .run_mobile_plugin("startHce", HceRequest { uuid })

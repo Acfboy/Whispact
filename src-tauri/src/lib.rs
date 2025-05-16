@@ -10,18 +10,18 @@ use tauri_plugin_nfc2::{self, Nfc2Ext};
 use tokio::sync::{mpsc::unbounded_channel, watch};
 use uuid::Uuid;
 
-/// 会启动监听 nfc 的事件，发送一个 nfc-new-uuid 事件通知前端读取到的 uuid。
+/// 初始化读卡器，读到卡时进行连接和发送等待发送的事件。
 ///
 /// # Note
-/// 被读的设备读到读卡的设备的 uuid 也是通过 reader 提供的 channel 来返回的。
-#[command]
-fn start_reader(app: AppHandle) -> Result<(), Error> {
+/// - 被读的设备读到读卡的设备的 uuid 也是通过 reader 提供的 channel 来返回的。
+/// - 注册向前端发送接收到的事件是在 connect 里，所以在这里也注册了。
+fn start_reader(app: AppHandle, uuid: Uuid) -> Result<(), Error> {
     let (sd, mut rv) = watch::channel(Uuid::new_v4());
     let (err_sd, mut err_rv) = unbounded_channel();
     let app_handle = app.clone();
     async_runtime::spawn(async move {
         let nfc = app_handle.nfc2();
-        nfc.init_nfc_reader(sd, err_sd).unwrap_or_else(|e| {
+        nfc.init_nfc_reader(sd, err_sd, uuid).unwrap_or_else(|e| {
             app_handle
                 .emit("err", Error::InitNfc(e.to_string()))
                 .unwrap();
@@ -58,23 +58,6 @@ fn start_reader(app: AppHandle) -> Result<(), Error> {
     Ok(())
 }
 
-/// 将当前的 uuid 设置给卡模拟
-#[command]
-fn set_hce_uuid(app: AppHandle) -> Result<String, Error> {
-    let state = app.state::<Mutex<DeviceBridge>>();
-    let guard = state.lock().unwrap();
-    let uuid = guard.uuid;
-    drop(guard);
-    let nfc = app.nfc2();
-    let uuid_str = String::from(
-        uuid.as_hyphenated()
-            .encode_lower(&mut Uuid::encode_buffer()),
-    );
-    nfc.set_hce(uuid)
-        .map_err(|e| Error::SetHce(e.to_string()))?;
-    Ok(uuid_str)
-}
-
 #[command]
 fn request_blep_bluetooth_permissions(app: AppHandle) -> Result<PermissionState, Error> {
     app.blep()
@@ -99,12 +82,17 @@ pub fn run() {
         .plugin(tauri_plugin_blep::init())
         .plugin(tauri_plugin_nfc2::init())
         .invoke_handler(tauri::generate_handler![
-            start_reader,
-            set_hce_uuid,
             request_blep_bluetooth_permissions,
             set_disposable_msg,
         ])
-        .manage(Mutex::new(DeviceBridge::new()))
+        .setup(|app| {
+            let bridge = DeviceBridge::new();
+            start_reader(app.handle().clone(), bridge.uuid).unwrap_or_else(|e| {
+                app.emit("err", e).unwrap();
+            });
+            app.manage(Mutex::new(bridge));
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
