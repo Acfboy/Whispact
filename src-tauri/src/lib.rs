@@ -34,7 +34,7 @@ fn start_reader(app: AppHandle, uuid: Uuid) -> Result<(), Error> {
             let uuid = *rv.borrow();
             let state = app_handle.state::<Mutex<DeviceBridge>>();
             let mut guard = state.lock().unwrap();
-            if (*guard).is_connected() {
+            if !(*guard).is_connected() {
                 (*guard)
                     .connect(uuid, app_handle.blep(), app_handle.clone())
                     .unwrap_or_else(|e| {

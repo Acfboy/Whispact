@@ -70,13 +70,13 @@ impl BLEComm for BLEPeripheral {
         }
     }
 
-    /// 阻塞直到连接成功。如果没有初始化，则 panic
+    /// 阻塞直到连接成功。
     fn connect(&mut self) -> Result<mpsc::UnboundedReceiver<Message>, Error> {
         if let Some(watcher) = &mut self.connect_watcher {
-            if let ConnectionStatus::Disconnected = *watcher.borrow() {
-                let mut watcher_1 = watcher.clone();
-                block_on(async move {
-                    watcher_1.changed().await.unwrap();
+            let status  = watcher.borrow().clone();
+            if let ConnectionStatus::Disconnected = status {
+                block_on(async {
+                    watcher.changed().await.unwrap();
                 });
             }
             Ok(self.recv_msg_receiver.take().unwrap())

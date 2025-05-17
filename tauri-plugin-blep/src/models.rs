@@ -35,7 +35,7 @@ pub struct WatchRecvPayload {
     pub uuid: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 #[serde(tag = "type")]
 pub enum ConnectionStatus {
     Connected,

@@ -12,7 +12,6 @@ pub enum Error {
     ReceiveBeforeConnect,
     ConnectBeforeSetup,
     BlePeripheralSendFail(String),
-    SetHce(String),
     RequestBlueTooth(String),
     InitNfc(String),
 }
