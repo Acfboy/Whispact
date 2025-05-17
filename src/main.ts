@@ -1,11 +1,11 @@
 import { createApp } from "vue";
 import "vuetify/styles";
-import "@mdi/font/css/materialdesignicons.css"; // 导入图标库
+import "@mdi/font/css/materialdesignicons.css"; 
 import { createVuetify } from "vuetify";
 import App from "./App.vue";
 import { components, directives } from "vuetify/dist/vuetify.js";
 import router from "./router";
-import Hello from "./components/hello.vue";
+import LoadingComponent from "./components/hello.vue";
 
 const vuetify = createVuetify({
   components,
@@ -16,7 +16,7 @@ const app = createApp(App);
 
 app.use(vuetify);
 app.use(router);
-app.component("MapComponent", Hello);
+app.component("LoadingComponent", LoadingComponent);
 
 app.config.errorHandler = (err) => {
   if (err instanceof Error) {
