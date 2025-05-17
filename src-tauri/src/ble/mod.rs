@@ -31,6 +31,8 @@ pub struct DeviceBridge {
 
 impl DeviceBridge {
     pub fn new() -> Self {
+        let uuid = Uuid::new_v4();
+        log::info!("uuid generated: {uuid}");
         Self {
             communicater: None,
             uuid: Uuid::new_v4(),
@@ -47,24 +49,25 @@ impl DeviceBridge {
         blep: Arc<Blep<Wry>>,
         handle: AppHandle,
     ) -> Result<(), Error> {
-        self.communicater = match self.uuid.as_u128().cmp(&uuid.as_u128()) {
+        let mut commu: Box<dyn BLEComm + Send + Sync> = match self.uuid.as_u128().cmp(&uuid.as_u128()) {
             Greater => {
+                log::info!("Act as BLECentral");
                 let commu = BLECentral::new(uuid);
-                Some(Box::new(commu))
+                Box::new(commu)
             }
             Less => {
+                log::info!("Act as BLEPeripheral");
                 let mut commu = BLEPeripheral::new();
                 commu.setup(blep, self.uuid);
-                Some(Box::new(commu))
+                Box::new(commu)
             }
             Equal => {
-                panic!("How lucky you are! There is only 1e-36 possibility to get the same uuid!");
+                return Err(Error::Lucky("How lucky you are! There is only 1e-36 possibility to get the same uuid!".to_string()));
             }
         };
 
-        let rx = Some(self.communicater.as_mut().unwrap().connect()?);
-        self.message_rx = rx;
-
+        self.message_rx = Some(commu.connect()?);
+        self.communicater = Some(commu);
         self.set_emmiter(handle)?;
         Ok(())
     }
@@ -90,6 +93,7 @@ impl DeviceBridge {
                 .expect("failed to send msg to frontend");
             }
         });
+        log::info!("Message event emmiter set.");
         Ok(())
     }
 
@@ -97,6 +101,7 @@ impl DeviceBridge {
         if self.next_msg.is_some() {
             return Err(Error::LastMessageNotSend);
         }
+        log::info!("Next message set: {msg:?}");
         self.next_msg = Some(msg);
         Ok(())
     }

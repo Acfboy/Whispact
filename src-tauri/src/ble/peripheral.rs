@@ -48,6 +48,7 @@ impl BLEPeripheral {
         async_runtime::spawn(async move {
             blep.setup(sd, noti_sd, uuid).expect("failed to setup blep");
         });
+        log::info!("Ble peripheral setup");
         self.is_advertize_start = true;
     }
 }
@@ -55,6 +56,7 @@ impl BLEPeripheral {
 impl BLEComm for BLEPeripheral {
     fn send(&self, msg: Message) -> Result<(), Error> {
         let msg = msg.to_string();
+        log::info!("Sending message: {msg:?}");
         match self.blep.clone() {
             Some(blep) => match block_on(async move { blep.send(msg) }) {
                 Err(s) => Err(Error::BlePeripheralSendFail(s.to_string())),
@@ -72,14 +74,20 @@ impl BLEComm for BLEPeripheral {
 
     /// 阻塞直到连接成功。
     fn connect(&mut self) -> Result<mpsc::UnboundedReceiver<Message>, Error> {
+        log::info!("Wating for connect");
         if let Some(watcher) = &mut self.connect_watcher {
             let status  = watcher.borrow().clone();
             if let ConnectionStatus::Disconnected = status {
                 block_on(async {
                     watcher.changed().await.unwrap();
                 });
+                log::info!("Ble peipheral connected.");
             }
-            Ok(self.recv_msg_receiver.take().unwrap())
+            if self.recv_msg_receiver.is_none() {
+                Err(Error::ConnectBeforeSetup)
+            } else {
+                Ok(self.recv_msg_receiver.take().unwrap())
+            }
         } else {
             Err(Error::ConnectBeforeSetup)
         }

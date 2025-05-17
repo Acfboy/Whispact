@@ -32,6 +32,7 @@ impl BLEComm for BLECentral {
         let (noti_sd, noti_rv) = mpsc::unbounded_channel();
         async_runtime::block_on(async move {
             let (sd, mut rv) = mpsc::channel(100);
+            log::info!("Ble central scanning...");
             self.handler
                 .discover(Some(sd), 3000, ScanFilter::None)
                 .await
@@ -39,17 +40,18 @@ impl BLEComm for BLECentral {
 
             let handler = self.handler;
             while let Some(devices) = rv.recv().await {
+                log::debug!("Discovered service: {devices:?}");
                 let target_device = devices.iter().find(|&x| {
                     x.service_data
                         .iter()
                         .any(|(id, _)| id.as_bytes() == self.uuid.as_bytes())
                 });
                 if let Some(device) = target_device {
-                    // TODO: 断连提示
                     handler
                         .connect(&device.address, OnDisconnectHandler::None)
                         .await
                         .map_err(|e| Error::BleCentralConnect(e.to_string()))?;
+                    log::info!("Ble central connected.");
                     break;
                 }
             }
@@ -57,6 +59,7 @@ impl BLEComm for BLECentral {
             self.handler
                 .subscribe(self.uuid, move |msg: Vec<u8>| {
                     let msg = serde_json::from_slice::<Message>(&msg);
+                    log::info!("Ble central received notification: {msg:?}");
                     noti_sd
                         .send(msg.expect("received not utf8 string"))
                         .expect("noti_sd send failed");
@@ -73,6 +76,7 @@ impl BLEComm for BLECentral {
 
     /// 向从端发送消息
     fn send(&self, message: Message) -> Result<(), Error> {
+        log::info!("Ble central sending message: {message:?}");
         async_runtime::block_on(async move {
             self.handler
                 .send_data(

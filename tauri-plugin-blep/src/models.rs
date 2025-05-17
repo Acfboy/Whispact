@@ -43,7 +43,7 @@ pub enum ConnectionStatus {
 }
 
 /// 手机间通信的信号
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum Message {
     /// 一次性消息
     Disposable(String),
@@ -61,7 +61,7 @@ pub enum Message {
     DiffPlan,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Plan {
     id: Uuid,
     plan: String,

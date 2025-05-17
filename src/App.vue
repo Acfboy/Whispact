@@ -2,11 +2,13 @@
 import { onMounted } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { info, error } from '@tauri-apps/plugin-log';
 
 async function setDisposableMsg() {
   try {
     await invoke("set_disposable_msg", { msg: "Hello World!" });
   } catch (e) {
+    error(e);
     alert(e);
   }
 }
@@ -20,6 +22,7 @@ onMounted(async () => {
       }
     );
     await listen<string>("err", (event: { payload: string }) => {
+      error(payload);
       alert("error: " + event.payload);
     });
   } catch (e) {

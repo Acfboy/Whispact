@@ -14,4 +14,5 @@ pub enum Error {
     BlePeripheralSendFail(String),
     RequestBlueTooth(String),
     InitNfc(String),
+    Lucky(String),
 }

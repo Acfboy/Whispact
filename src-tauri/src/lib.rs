@@ -6,6 +6,7 @@ mod ble;
 use ble::DeviceBridge;
 use error::Error;
 use tauri_plugin_blep::mobile::Message;
+use tauri_plugin_log::{Target, TargetKind};
 use tauri_plugin_nfc2::{self, Nfc2Ext};
 use tokio::sync::{mpsc::unbounded_channel, watch};
 use uuid::Uuid;
@@ -32,15 +33,21 @@ fn start_reader(app: AppHandle, uuid: Uuid) -> Result<(), Error> {
     async_runtime::spawn(async move {
         while rv.changed().await.is_ok() {
             let uuid = *rv.borrow();
+
+            log::info!("Read uuid: {}", uuid.to_string());
+
             let state = app_handle.state::<Mutex<DeviceBridge>>();
             let mut guard = state.lock().unwrap();
             if !(*guard).is_connected() {
+                log::info!("Status: Disconnected; Try to connect...");
+
                 (*guard)
                     .connect(uuid, app_handle.blep(), app_handle.clone())
                     .unwrap_or_else(|e| {
                         app_handle.emit("err", e).unwrap();
                     });
             }
+            log::info!("Status: Connected.");
             (*guard).send().unwrap_or_else(|e| {
                 app_handle.emit("err", e).unwrap();
             });
@@ -76,7 +83,14 @@ fn set_disposable_msg(app: AppHandle, msg: String) -> Result<(), Error> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_log::Builder::new().build())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .targets([
+                    Target::new(TargetKind::LogDir { file_name: Some("log".to_string()) }),
+                    Target::new(TargetKind::Stdout),
+                ])
+                .build(),
+        )
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_blec::init())
         .plugin(tauri_plugin_blep::init())
