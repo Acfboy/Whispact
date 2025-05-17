@@ -30,3 +30,4 @@ tokio = "1.44.2"
 uuid = { version = "1.16.0", features = ["v4"] }
 tauri-plugin-log = "2"
 log = "0.4.27"
+tauri-plugin-store = "2"

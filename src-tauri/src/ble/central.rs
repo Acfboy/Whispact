@@ -1,5 +1,5 @@
 use super::BLEComm;
-use crate::error::Error;
+use crate::models::Error;
 use tauri::async_runtime;
 use tauri_plugin_blec::{
     self, models::ScanFilter, models::WriteType, Handler, OnDisconnectHandler,

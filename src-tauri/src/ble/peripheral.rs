@@ -1,5 +1,5 @@
 use super::BLEComm;
-use crate::error::Error;
+use crate::models::Error;
 use std::sync::Arc;
 use tauri::async_runtime::block_on;
 use tauri::{async_runtime, Wry};
@@ -76,7 +76,7 @@ impl BLEComm for BLEPeripheral {
     fn connect(&mut self) -> Result<mpsc::UnboundedReceiver<Message>, Error> {
         log::info!("Wating for connect");
         if let Some(watcher) = &mut self.connect_watcher {
-            let status  = watcher.borrow().clone();
+            let status = watcher.borrow().clone();
             if let ConnectionStatus::Disconnected = status {
                 block_on(async {
                     watcher.changed().await.unwrap();

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Channel;
 use tauri::plugin::PermissionState;
@@ -52,19 +54,19 @@ pub enum Message {
     /// 打卡“保存这一刻”
     Seal(String),
     /// 同步共同计划
-    PlanSync(Vec<Plan>),
-    /// 打卡完成共同计划，同步后只需要传一个 uuid
-    PlanCheck(Uuid),
-    /// 两人填写的保存这一刻不同
-    DiffSeal,
-    /// 两人想完成的计划不同
-    DiffPlan,
+    PlanSync(Plans)
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct Plans {
+    selected_plan: Option<Uuid>,
+    plans: HashMap<Uuid, Plan>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Plan {
-    id: Uuid,
-    plan: String,
+    title: String,
+    body: String,
 }
 
 impl Message {

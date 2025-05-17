@@ -10,6 +10,7 @@
     "opener:default",
     "blec:default",
     "log:default",
-    "log:default"
+    "log:default",
+    "store:default"
   ]
 }

@@ -2,7 +2,7 @@ pub mod central;
 pub mod peripheral;
 use std::sync::Arc;
 
-use crate::error::Error;
+use crate::models::Error;
 use central::BLECentral;
 use peripheral::BLEPeripheral;
 use std::cmp::Ordering::*;
@@ -49,22 +49,26 @@ impl DeviceBridge {
         blep: Arc<Blep<Wry>>,
         handle: AppHandle,
     ) -> Result<(), Error> {
-        let mut commu: Box<dyn BLEComm + Send + Sync> = match self.uuid.as_u128().cmp(&uuid.as_u128()) {
-            Greater => {
-                log::info!("Act as BLECentral");
-                let commu = BLECentral::new(uuid);
-                Box::new(commu)
-            }
-            Less => {
-                log::info!("Act as BLEPeripheral");
-                let mut commu = BLEPeripheral::new();
-                commu.setup(blep, self.uuid);
-                Box::new(commu)
-            }
-            Equal => {
-                return Err(Error::Lucky("How lucky you are! There is only 1e-36 possibility to get the same uuid!".to_string()));
-            }
-        };
+        let mut commu: Box<dyn BLEComm + Send + Sync> =
+            match self.uuid.as_u128().cmp(&uuid.as_u128()) {
+                Greater => {
+                    log::info!("Act as BLECentral");
+                    let commu = BLECentral::new(uuid);
+                    Box::new(commu)
+                }
+                Less => {
+                    log::info!("Act as BLEPeripheral");
+                    let mut commu = BLEPeripheral::new();
+                    commu.setup(blep, self.uuid);
+                    Box::new(commu)
+                }
+                Equal => {
+                    return Err(Error::Lucky(
+                        "How lucky you are! There is only 1e-36 possibility to get the same uuid!"
+                            .to_string(),
+                    ));
+                }
+            };
 
         self.message_rx = Some(commu.connect()?);
         self.communicater = Some(commu);
@@ -85,10 +89,7 @@ impl DeviceBridge {
                     Message::Disposable(s) => handle.emit("recv-disposable-msg", s),
                     Message::BackToBack(s) => handle.emit("recv-back-to-back-msg", s),
                     Message::Seal(s) => handle.emit("recv-seal-msg", s),
-                    Message::PlanCheck(u) => handle.emit("recv-plan-check", u),
                     Message::PlanSync(p) => handle.emit("recv-plan-sync", p),
-                    Message::DiffPlan => handle.emit("err-diff-plan", ()),
-                    Message::DiffSeal => handle.emit("err-diff-seal", ()),
                 }
                 .expect("failed to send msg to frontend");
             }
