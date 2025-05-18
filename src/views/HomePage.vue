@@ -1,12 +1,11 @@
 <template>
   <v-container class="fill-height">
     <v-container class="d-flex flex-column justify-center  align-center">
-      <v-card  v-ripple  prepend-icon="mdi-weather-windy" class="mb-8" variant="outlined" color="indigo" title="一次性消息" subtitle="这段话，只为这一刻" width="70vw">
+      <v-card @click="navigateTo('Disposable')" v-ripple  prepend-icon="mdi-weather-windy" class="mb-8" variant="outlined" color="indigo" title="一次性消息" subtitle="这段话，只为这一刻" width="70vw">
         <v-card-text>
           文字仅现一次，读完永远消散。
         </v-card-text>
       </v-card>
-
 
       <v-card v-ripple   prepend-icon="mdi-arrow-u-down-right" class="mb-8" variant="outlined" color="indigo" title="背靠背消息" subtitle="同步方位开启密语" width="70vw">
         <v-card-text>
@@ -24,5 +23,9 @@
 </template>
 
 <script setup lang="ts">
-// 组件逻辑可以在这里添加
+import { useRouter } from 'vue-router';
+const router = useRouter();
+const navigateTo = (routeName: string) => {
+  router.push({ name: routeName });
+};
 </script>

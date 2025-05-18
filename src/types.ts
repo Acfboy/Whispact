@@ -30,21 +30,21 @@ export interface FinishedPlanList {
 }
 
 export enum MessageType {
-  Disposable = 'Disposable',
-  BackToBack = 'BackToBack',
-  Seal = 'Seal',
-  PlanSync = 'PlanSync'
+  Disposable = "Disposable",
+  BackToBack = "BackToBack",
+  Seal = "Seal",
+  PlanSync = "PlanSync",
 }
 
-export type Message = 
+export type Message =
   | { type: MessageType.Disposable; payload: string }
   | { type: MessageType.BackToBack; payload: string }
   | { type: MessageType.Seal; payload: string }
   | { type: MessageType.PlanSync; payload: Plans };
 
 export interface Plans {
-  selectedPlan?: string; 
-  plans: Record<string, Plan>; 
+  selectedPlan?: string;
+  plans: Record<string, Plan>;
 }
 
 export interface Plan {

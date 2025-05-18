@@ -28,7 +28,7 @@ const router = createRouter({
     },
     {
       path: "/disposable",
-      name: "disposable",
+      name: "Disposable",
       component: Disposable,
     },
   ],

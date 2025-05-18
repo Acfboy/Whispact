@@ -51,7 +51,6 @@ onMounted(async () => {
       <router-view />
     </v-main>
 
-
     <v-bottom-navigation grow v-model="page">
       <v-btn value="home" to="/home">
         <v-icon>mdi-home</v-icon>
