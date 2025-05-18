@@ -66,7 +66,7 @@ impl<R: Runtime> Blep<R> {
         });
 
         let uuid = String::from(
-            uuid.as_hyphenated()
+            uuid.hyphenated()
                 .encode_lower(&mut Uuid::encode_buffer()),
         );
         self.0
