@@ -46,8 +46,8 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
         if (key == "be_readed") {
             Log.i("be_readed", "changed")
             val data = sharedPreferences.getString(key, "") ?: return@OnSharedPreferenceChangeListener
-            if (data.length >= 16) {
-                val truncatedData = data.substring(0, 16)
+            if (data.length >= 32) {
+                val truncatedData = data.substring(0, 32)
                 sendData(truncatedData)
             }
         }
