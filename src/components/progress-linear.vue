@@ -53,7 +53,7 @@ function handleStart() {
   progress.value = 0
   timer = setInterval(() => {
     const elapsed = Date.now() - startTime
-    progress.value = Math.min((elapsed / duration) * 100, 100)
+    progress.value = Math.min((elapsed / props.duration) * 100, 100)
     if (progress.value >= 100) {
       clearInterval(timer)
       timer = null

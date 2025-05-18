@@ -1,8 +1,9 @@
-v<script setup lang="ts">
+<script setup lang="ts">
 import { computed, onMounted } from "vue";
 import { listen } from "@tauri-apps/api/event";
 import { error } from '@tauri-apps/plugin-log';
 import { useRoute, useRouter } from "vue-router";
+import { invoke } from "@tauri-apps/api/core";
 
 const pageName = {
   "home": "Whispact",
@@ -33,6 +34,7 @@ onMounted(async () => {
       error(event.payload);
       alert("error: " + event.payload);
     });
+    await invoke("request_blep_bluetooth_permissions", {});
   } catch (e) {
     alert(e);
   }

@@ -29,14 +29,19 @@ const router = createRouter({
     },
     {
       path: "/disposable",
-      name: "Disposable",
+      name: "disposable",
       component: Disposable,
     },
     {
       path: "/log",
       name: "log",
       component: LogPage
-    }
+    },
+    {
+      path:"/prompt",
+      name:"prompt",
+      component: () => import('../views/PromptPage.vue'),
+    },
   ],
 });
 export default router;
