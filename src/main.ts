@@ -6,6 +6,7 @@ import App from "./App.vue";
 import { components, directives } from "vuetify/dist/vuetify.js";
 import router from "./router";
 import LoadingComponent from "./components/hello.vue";
+import { error } from "@tauri-apps/plugin-log";
 
 const vuetify = createVuetify({
   components,
@@ -21,6 +22,7 @@ app.component("LoadingComponent", LoadingComponent);
 app.config.errorHandler = (err) => {
   if (err instanceof Error) {
     alert("错误：" + err.message);
+    error(err.message);
   }
 };
 

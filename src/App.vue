@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { info, error } from '@tauri-apps/plugin-log';
@@ -11,6 +11,13 @@ async function setDisposableMsg() {
     error(e);
     alert(e);
   }
+}
+
+const page = ref("home");
+const pageName = {
+  "home": "Whispact",
+  "seal": "时刻",
+  "settings": "设置",
 }
 
 onMounted(async () => {
@@ -33,28 +40,32 @@ onMounted(async () => {
 
 <template>
   <v-app>
+    <v-app-bar scroll-behavior="elevate">
+      <template v-slot:prepend>
+        <v-app-bar-nav-icon></v-app-bar-nav-icon>
+      </template>
+      <v-app-bar-title>{{ pageName[page] }}</v-app-bar-title>
+    </v-app-bar>
+
     <v-main>
-      <main class="container">
-        <h1>Welcome to Whispact! 这是测试页面。</h1>
-        <v-btn @click="setDisposableMsg">测试消息</v-btn>
-        <router-view />
-      </main>
+      <router-view />
     </v-main>
 
-    <v-bottom-navigation grow>
-      <v-btn value="seal" to="/seal">
-        <v-icon>mdi-clock-time-four</v-icon>
-        <span>Seal</span>
-      </v-btn>
 
+    <v-bottom-navigation grow v-model="page">
       <v-btn value="home" to="/home">
         <v-icon>mdi-home</v-icon>
-        <span>Home</span>
+        <span>主页</span>
+      </v-btn>
+
+      <v-btn value="seal" to="/seal">
+        <v-icon>mdi-clock-time-four</v-icon>
+        <span>时刻</span>
       </v-btn>
 
       <v-btn value="settings" to="/settings">
         <v-icon>mdi-cog</v-icon>
-        <span>Settings</span>
+        <span>设置</span>
       </v-btn>
     </v-bottom-navigation>
   </v-app>
