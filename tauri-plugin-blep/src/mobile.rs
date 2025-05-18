@@ -9,6 +9,7 @@ use tauri::{
 use tokio::sync::mpsc;
 use tokio::sync::watch;
 use uuid::Uuid;
+use crate::error::Error;
 
 pub use crate::models::*;
 
@@ -35,10 +36,14 @@ impl<R: Runtime> Blep<R> {
         // 创建传输消息的 IPC channel，解析收到的消息后用 message_sender 转发。
         let channel = Channel::new(move |event| {
             let payload = match event {
-                InvokeResponseBody::Json(payload) => serde_json::from_str::<Message>(&payload)
-                    .expect("could not deserialize ble peripheral ipc response"),
+                InvokeResponseBody::Json(payload) => serde_json::from_str::<RecvData>(&payload)
+                    .map_err(|e| Error::InvalidMessage(e.to_string()))
+                    .map_err(Into::<tauri::Error>::into)?,
                 _ => panic!("Wrong return value from plugin-blep"),
             };
+            let payload = serde_json::from_str(&payload.msg)
+                .map_err(|e| Error::InvalidMessage(e.to_string()))
+                .map_err(Into::<tauri::Error>::into)?;
             let sender = message_sender.clone();
             sender
                 .send(payload)

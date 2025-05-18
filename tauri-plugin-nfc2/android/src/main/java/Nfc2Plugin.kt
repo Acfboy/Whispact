@@ -15,7 +15,6 @@ import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.*
-import java.io.IOException
 import kotlin.random.Random
 
 @InvokeArg
@@ -43,6 +42,17 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
     private var errorChannel: Channel? = null
     private lateinit var prefs: SharedPreferences
 
+    private val sharedPreferencesChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
+        if (key == "be_readed") {
+            Log.i("be_readed", "changed")
+            val data = sharedPreferences.getString(key, "") ?: return@OnSharedPreferenceChangeListener
+            if (data.length >= 16) {
+                val truncatedData = data.substring(0, 16)
+                sendData(truncatedData)
+            }
+        }
+    }
+
     private val pendingIntent: PendingIntent by lazy {
         PendingIntent.getActivity(
                 activity,
@@ -60,13 +70,8 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
         currentUuid = args.uuid
         prefs = activity.getSharedPreferences("nfc_plugin", Activity.MODE_PRIVATE)
         saveHceConfig()
-        prefs.registerOnSharedPreferenceChangeListener { sharedPreferences, key ->
-            if (key == "be_readed") {
-                val data = sharedPreferences.getString(key, "")!!.substring(0, 16);
-                data?.let { sendData(it) }
-            }
-        }
         checkNfcStatus()
+        prefs.registerOnSharedPreferenceChangeListener(sharedPreferencesChangeListener)
     }
     @Command
     fun stopHce(invoke: Invoke) {
@@ -120,11 +125,11 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
                         "00A40400${String.format("%02X", currentAid.length / 2)}$currentAid".hexToBytes()
                 val selectResponse = isoDep.transceive(selectApdu)
                 if (!isSuccess(selectResponse)) return@use
-                
+
                 Log.i("handle intent", "00CA0000${currentUuid}")
                 val uuidResponse = isoDep.transceive("00CA0000${currentUuid}".hexToBytes())
                 if (!isSuccess(uuidResponse)) return@use
-                Log.i("handle intent", "geted")  
+                Log.i("handle intent", "geted")
                 val uuid =
                         uuidResponse
                                 .copyOfRange(0, uuidResponse.size - 2)
@@ -185,10 +190,11 @@ class HceService : HostApduService() {
             0xCA -> {
                 if (apdu.size >= 4 && apdu[2] == 0x00.toByte() && apdu[3] == 0x00.toByte()) {
                     val randomBytes = Random.nextBytes(60)
+                    val res = "${apdu.toHexString().substring(8)}${randomBytes.toHexString()}"
                     Log.i("read hce", "${apdu.toHexString()}")
                     Log.i("read hce", "${prefs.getString("uuid", "")!!.replace("-", "")}")
-                    val res = "${apdu.toHexString().substring(8)}${randomBytes.toHexString()}"
-                    prefs.edit().putString("be_readed", res).apply()
+                    Log.i("read hce", res)
+                    prefs.edit().putString("be_readed", res).commit()
                     (prefs.getString("uuid", "")!!.replace("-", "").hexToBytes() +
                             "9000".hexToBytes())
                 } else {

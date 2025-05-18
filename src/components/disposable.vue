@@ -1,37 +1,8 @@
 <template>
-  <!-- <div>
-    <v-text-field
-      :rules="rules"
-      hide-details="auto"
-      label="请输入消息"
-    ></v-text-field>
-  </div> -->
-  <div>
-  <v-card class="ma-6">
-    <v-progress-linear
-      :model-value="progress"
-      :height="2"
-       @mousedown="startPress"
-       @mouseup="endPress"
-       @mouseleave="endPress"
-       @touchstart.prevent="startPress"
-       @touchend="endPress"
-       >
-  </v-progress-linear>
-      <v-card-text
-       @mousedown="startPress"
-       @mouseup="endPress"
-       @mouseleave="endPress"
-       @touchstart.prevent="startPress"
-       @touchend="endPress">
-          Lorem scaevola imperdiet nec ut, sed euismod convenire principes at. Est et nobis iisque percipit.
-      </v-card-text>
-  </v-card>
-  </div>
   <progressLine
   :hight="4"
   :ma="6"
-  :duration="2000" @endPress="a"></progressLine>
+  :duration="500" @endPress="a"></progressLine>
 </template>
   
   <script setup>

@@ -1,10 +1,10 @@
-use std::sync::Mutex;
 use tauri::{command, plugin::PermissionState, AppHandle, Manager};
 use tauri_plugin_blep::{
     mobile::{Message, Plans},
     BlepExt,
 };
 use tauri_plugin_store::StoreExt;
+use tokio::sync::Mutex;
 
 use crate::{
     ble::DeviceBridge,
@@ -12,33 +12,33 @@ use crate::{
 };
 
 #[command]
-pub fn set_disposable_msg(app: AppHandle, msg: String) -> Result<(), Error> {
+pub async fn set_disposable_msg(app: AppHandle, msg: String) -> Result<(), Error> {
     let state = app.state::<Mutex<DeviceBridge>>();
-    let mut guard = state.lock().unwrap();
+    let mut guard = state.lock().await;
     (*guard).set_msg(Message::Disposable(msg))?;
     Ok(())
 }
 
 #[command]
-pub fn set_back_to_back_msg(app: AppHandle, msg: String) -> Result<(), Error> {
+pub async fn set_back_to_back_msg(app: AppHandle, msg: String) -> Result<(), Error> {
     let state = app.state::<Mutex<DeviceBridge>>();
-    let mut guard = state.lock().unwrap();
+    let mut guard = state.lock().await;
     (*guard).set_msg(Message::BackToBack(msg))?;
     Ok(())
 }
 
 #[command]
-pub fn set_seal_msg(app: AppHandle, msg: String) -> Result<(), Error> {
+pub async fn set_seal_msg(app: AppHandle, msg: String) -> Result<(), Error> {
     let state = app.state::<Mutex<DeviceBridge>>();
-    let mut guard = state.lock().unwrap();
+    let mut guard = state.lock().await;
     (*guard).set_msg(Message::Seal(msg))?;
     Ok(())
 }
 
 #[command]
-pub fn set_plan_sync_msg(app: AppHandle, plan: Plans) -> Result<(), Error> {
+pub async fn set_plan_sync_msg(app: AppHandle, plan: Plans) -> Result<(), Error> {
     let state = app.state::<Mutex<DeviceBridge>>();
-    let mut guard = state.lock().unwrap();
+    let mut guard = state.lock().await;
     (*guard).set_msg(Message::PlanSync(plan))?;
     Ok(())
 }

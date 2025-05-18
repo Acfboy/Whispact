@@ -19,7 +19,9 @@ mod utils;
 /// - 被读的设备读到读卡的设备的 uuid 也是通过 reader 提供的 channel 来返回的。
 /// - 注册向前端发送接收到的事件是在 connect 里，所以在这里也注册了。
 fn start_reader(app: AppHandle, uuid: Uuid) -> Result<(), Error> {
-    let (sd, mut rv) = watch::channel(Uuid::new_v4());
+    let placeholder = Uuid::new_v4();
+    log::info!("{}", placeholder.simple());
+    let (sd, mut rv) = watch::channel(placeholder);
     let (err_sd, mut err_rv) = unbounded_channel();
     let app_handle = app.clone();
     async_runtime::spawn(async move {
@@ -50,7 +52,6 @@ fn start_reader(app: AppHandle, uuid: Uuid) -> Result<(), Error> {
                         app_handle.emit("err", e).unwrap();
                     });
             }
-            log::info!("Status: Connected.");
             (*guard).send().await.unwrap_or_else(|e| {
                 app_handle.emit("err", e).unwrap();
             });

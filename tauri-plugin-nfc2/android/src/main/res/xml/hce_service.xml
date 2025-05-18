@@ -4,7 +4,7 @@
     android:requireDeviceUnlock="false">
     
     <aid-group 
-        android:category="other"
+        android:category="payment"
         android:description="@string/hce_group_description">
         <aid-filter android:name="F00000000A0101"/>
     </aid-group>
