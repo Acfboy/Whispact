@@ -29,6 +29,12 @@ pub struct SendResponse {
     pub success: bool,
 }
 
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RecvData {
+    pub msg: String,
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WatchRecvPayload {

@@ -30,8 +30,8 @@ onMounted(async () => {
         alert(event.payload);
       }
     );
-    await listen<string>("err", (event: { payload: string }) => {
-      error(event.payload);
+    await listen<string>("err", (event: { payload: Object }) => {
+      error(JSON.stringify(event.payload));
       alert("error: " + event.payload);
     });
     await invoke("request_blep_bluetooth_permissions", {});

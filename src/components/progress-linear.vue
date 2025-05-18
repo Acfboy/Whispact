@@ -19,6 +19,7 @@
       @touchend="handleEnd"
       > 
       <slot />
+      {{ props.message }}
       </v-card-text>
     </v-card>
   </div>
@@ -40,6 +41,10 @@ const props = defineProps({
     type: Number,
     default: 1000
   },
+  message: {
+    type: String, 
+    default: ""
+  }
 })
 const emit = defineEmits(['endPress'])
 
