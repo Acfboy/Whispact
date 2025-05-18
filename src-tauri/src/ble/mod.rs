@@ -3,6 +3,7 @@ pub mod peripheral;
 use std::sync::Arc;
 
 use crate::models::Error;
+use async_trait::async_trait;
 use central::BLECentral;
 use peripheral::BLEPeripheral;
 use std::cmp::Ordering::*;
@@ -12,12 +13,13 @@ use tokio::sync::mpsc;
 use uuid::Uuid;
 
 /// BLE 通信的主从端都会实现的 trait
+#[async_trait]
 pub trait BLEComm {
-    fn send(&self, message: Message) -> Result<(), Error>;
+    async fn send(&self, message: Message) -> Result<(), Error>;
 
-    /// 阻塞直到连接完成，返回接收器。
+    /// 直到连接完成返回接收器。
     /// 用于在触碰后等待连接。
-    fn connect(&mut self) -> Result<mpsc::UnboundedReceiver<Message>, Error>;
+    async fn connect(&mut self) -> Result<mpsc::UnboundedReceiver<Message>, Error>;
 
     fn is_connected(&self) -> bool;
 }
@@ -43,7 +45,7 @@ impl DeviceBridge {
 
     /// 连接上另一条设备，根据 uuid 决定自己应该是主端还是从端，然后设置事件监听转发到前端
     /// - 这里规定大的作为主端，小的作为从端。
-    pub fn connect(
+    pub async fn connect(
         &mut self,
         uuid: Uuid,
         blep: Arc<Blep<Wry>>,
@@ -70,7 +72,7 @@ impl DeviceBridge {
                 }
             };
 
-        self.message_rx = Some(commu.connect()?);
+        self.message_rx = Some(commu.connect().await?);
         self.communicater = Some(commu);
         self.set_emmiter(handle)?;
         Ok(())
@@ -107,7 +109,7 @@ impl DeviceBridge {
         Ok(())
     }
 
-    pub fn send(&mut self) -> Result<(), Error> {
+    pub async fn send(&mut self) -> Result<(), Error> {
         if self.next_msg.is_none() {
             return Ok(());
         }
@@ -117,7 +119,8 @@ impl DeviceBridge {
         self.communicater
             .as_mut()
             .unwrap()
-            .send(self.next_msg.take().unwrap())?;
+            .send(self.next_msg.take().unwrap())
+            .await?;
         Ok(())
     }
 

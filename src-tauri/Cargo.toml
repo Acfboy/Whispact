@@ -31,3 +31,5 @@ uuid = { version = "1.16.0", features = ["v4"] }
 tauri-plugin-log = "2"
 log = "0.4.27"
 tauri-plugin-store = "2"
+async-trait = "0.1.88"
+tauri-plugin-fs = "2"

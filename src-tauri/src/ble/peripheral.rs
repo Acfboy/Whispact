@@ -1,7 +1,7 @@
 use super::BLEComm;
 use crate::models::Error;
+use async_trait::async_trait;
 use std::sync::Arc;
-use tauri::async_runtime::block_on;
 use tauri::{async_runtime, Wry};
 use tauri_plugin_blep::mobile::{Blep, ConnectionStatus, Message};
 use tokio::sync::mpsc;
@@ -53,12 +53,13 @@ impl BLEPeripheral {
     }
 }
 
+#[async_trait]
 impl BLEComm for BLEPeripheral {
-    fn send(&self, msg: Message) -> Result<(), Error> {
+    async fn send(&self, msg: Message) -> Result<(), Error> {
         let msg = msg.to_string();
         log::info!("Sending message: {msg:?}");
         match self.blep.clone() {
-            Some(blep) => match block_on(async move { blep.send(msg) }) {
+            Some(blep) => match blep.send(msg) {
                 Err(s) => Err(Error::BlePeripheralSendFail(s.to_string())),
                 Ok(ok) => {
                     if ok.success {
@@ -73,14 +74,12 @@ impl BLEComm for BLEPeripheral {
     }
 
     /// 阻塞直到连接成功。
-    fn connect(&mut self) -> Result<mpsc::UnboundedReceiver<Message>, Error> {
+    async fn connect(&mut self) -> Result<mpsc::UnboundedReceiver<Message>, Error> {
         log::info!("Wating for connect");
         if let Some(watcher) = &mut self.connect_watcher {
             let status = watcher.borrow().clone();
             if let ConnectionStatus::Disconnected = status {
-                block_on(async {
-                    watcher.changed().await.unwrap();
-                });
+                watcher.changed().await.unwrap();
                 log::info!("Ble peipheral connected.");
             }
             if self.recv_msg_receiver.is_none() {

@@ -1,6 +1,9 @@
 use std::sync::Mutex;
 use tauri::{command, plugin::PermissionState, AppHandle, Manager};
-use tauri_plugin_blep::{mobile::{Message, Plans}, BlepExt};
+use tauri_plugin_blep::{
+    mobile::{Message, Plans},
+    BlepExt,
+};
 use tauri_plugin_store::StoreExt;
 
 use crate::{

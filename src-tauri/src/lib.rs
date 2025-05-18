@@ -1,4 +1,5 @@
-use std::sync::Mutex;
+use tauri_plugin_fs::FsExt;
+use tokio::sync::Mutex;
 mod models;
 use tauri::{async_runtime, AppHandle, Emitter, Manager};
 use tauri_plugin_blep::{self, BlepExt};
@@ -38,18 +39,19 @@ fn start_reader(app: AppHandle, uuid: Uuid) -> Result<(), Error> {
             log::info!("Read uuid: {}", uuid.to_string());
 
             let state = app_handle.state::<Mutex<DeviceBridge>>();
-            let mut guard = state.lock().unwrap();
+            let mut guard = state.lock().await;
             if !(*guard).is_connected() {
                 log::info!("Status: Disconnected; Try to connect...");
 
                 (*guard)
                     .connect(uuid, app_handle.blep(), app_handle.clone())
+                    .await
                     .unwrap_or_else(|e| {
                         app_handle.emit("err", e).unwrap();
                     });
             }
             log::info!("Status: Connected.");
-            (*guard).send().unwrap_or_else(|e| {
+            (*guard).send().await.unwrap_or_else(|e| {
                 app_handle.emit("err", e).unwrap();
             });
         }
@@ -69,6 +71,7 @@ fn start_reader(app: AppHandle, uuid: Uuid) -> Result<(), Error> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(
             tauri_plugin_log::Builder::new()
@@ -78,6 +81,8 @@ pub fn run() {
                     }),
                     Target::new(TargetKind::Stdout),
                 ])
+                .level(log::LevelFilter::Info)
+                .max_file_size(50_000)
                 .build(),
         )
         .plugin(tauri_plugin_opener::init())
@@ -100,6 +105,10 @@ pub fn run() {
             set_plan_sync_msg,
         ])
         .setup(|app| {
+            let scope = app.fs_scope();
+            let data_dir = app.path().data_dir().unwrap();
+            scope.allow_directory(data_dir, true).unwrap();
+
             let bridge = DeviceBridge::new();
             start_reader(app.handle().clone(), bridge.uuid).unwrap_or_else(|e| {
                 app.emit("err", e).unwrap();
