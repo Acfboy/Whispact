@@ -1,23 +1,24 @@
-<script setup lang="ts">
-import { onMounted, ref } from "vue";
-import { invoke } from "@tauri-apps/api/core";
+v<script setup lang="ts">
+import { computed, onMounted } from "vue";
 import { listen } from "@tauri-apps/api/event";
-import { info, error } from '@tauri-apps/plugin-log';
+import { error } from '@tauri-apps/plugin-log';
+import { useRoute, useRouter } from "vue-router";
 
-async function setDisposableMsg() {
-  try {
-    await invoke("set_disposable_msg", { msg: "Hello World!" });
-  } catch (e) {
-    error(e);
-    alert(e);
-  }
-}
-
-const page = ref("home");
 const pageName = {
   "home": "Whispact",
   "seal": "时刻",
   "settings": "设置",
+  "log": "查看日志"
+}
+
+const goBackSet = new Set(["log"]);
+
+const route = useRoute();
+const currentName = computed(() => route.name as keyof typeof pageName);
+
+const router = useRouter();
+const goBack = () => {
+  router.go(-1);
 }
 
 onMounted(async () => {
@@ -29,7 +30,7 @@ onMounted(async () => {
       }
     );
     await listen<string>("err", (event: { payload: string }) => {
-      error(payload);
+      error(event.payload);
       alert("error: " + event.payload);
     });
   } catch (e) {
@@ -42,16 +43,18 @@ onMounted(async () => {
   <v-app>
     <v-app-bar scroll-behavior="elevate">
       <template v-slot:prepend>
-        <v-app-bar-nav-icon></v-app-bar-nav-icon>
+        <v-app-bar-nav-icon v-if="!goBackSet.has(currentName)"></v-app-bar-nav-icon>
+        <v-icon class="ml-3" v-else @click="goBack">mdi-arrow-left</v-icon>
       </template>
-      <v-app-bar-title>{{ pageName[page] }}</v-app-bar-title>
+      <v-app-bar-title>{{ pageName[currentName] }}</v-app-bar-title>
     </v-app-bar>
 
     <v-main>
       <router-view />
     </v-main>
 
-    <v-bottom-navigation grow v-model="page">
+
+    <v-bottom-navigation grow>
       <v-btn value="home" to="/home">
         <v-icon>mdi-home</v-icon>
         <span>主页</span>

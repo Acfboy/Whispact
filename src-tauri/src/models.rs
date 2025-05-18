@@ -22,13 +22,13 @@ pub enum Error {
 
 #[derive(Deserialize, Serialize)]
 pub struct MessageDraft {
-    title: String, 
+    title: String,
     body: String,
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct DisposableDrafts{
-    pub drafts: Vec<MessageDraft>
+pub struct DisposableDrafts {
+    pub drafts: Vec<MessageDraft>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -38,7 +38,7 @@ pub struct BackToBackDrafs {
 
 #[derive(Deserialize, Serialize)]
 pub struct Instance {
-    pub instance: String, 
+    pub instance: String,
     pub time: String,
 }
 

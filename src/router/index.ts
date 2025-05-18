@@ -3,6 +3,7 @@ import HomePage from "../views/HomePage.vue";
 import SealPage from "../views/SealPage.vue";
 import SettingPage from "../views/SettingPage.vue";
 import Disposable from "../components/disposable.vue";
+import LogPage from "../views/LogPage.vue";
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -13,17 +14,17 @@ const router = createRouter({
     },
     {
       path: "/home",
-      name: "Home",
+      name: "home",
       component: HomePage,
     },
     {
       path: "/settings",
-      name: "Settings",
+      name: "settings",
       component: SettingPage,
     },
     {
       path: "/seal",
-      name: "Seal",
+      name: "seal",
       component: SealPage,
     },
     {
@@ -31,6 +32,11 @@ const router = createRouter({
       name: "Disposable",
       component: Disposable,
     },
+    {
+      path: "/log",
+      name: "log",
+      component: LogPage
+    }
   ],
 });
 export default router;

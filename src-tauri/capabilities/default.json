@@ -10,7 +10,14 @@
     "opener:default",
     "blec:default",
     "log:default",
-    "log:default",
-    "store:default"
+    "store:default",
+    "fs:allow-create",
+    "fs:allow-exists",
+    "fs:allow-write-text-file",
+    "fs:read-dirs",
+    "fs:allow-mkdir",
+    "fs:allow-read-text-file",
+    "fs:allow-remove",
+    "fs:allow-copy-file"
   ]
 }
