@@ -37,7 +37,7 @@ impl DeviceBridge {
         log::info!("uuid generated: {uuid}");
         Self {
             communicater: None,
-            uuid: Uuid::new_v4(),
+            uuid,
             message_rx: None,
             next_msg: None,
         }
@@ -87,6 +87,7 @@ impl DeviceBridge {
         };
         async_runtime::spawn(async move {
             while let Some(msg) = rx.recv().await {
+                log::info!("Received: {:?}", msg);
                 match msg {
                     Message::Disposable(s) => handle.emit("recv-disposable-msg", s),
                     Message::BackToBack(s) => handle.emit("recv-back-to-back-msg", s),

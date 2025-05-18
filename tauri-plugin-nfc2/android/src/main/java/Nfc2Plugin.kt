@@ -45,9 +45,9 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
     private val sharedPreferencesChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
         if (key == "be_readed") {
             Log.i("be_readed", "changed")
-            val data = sharedPreferences.getString(key, "") ?: return@OnSharedPreferenceChangeListener
-            if (data.length >= 32) {
-                val truncatedData = data.substring(0, 32)
+            val da = sharedPreferences.getString(key, "") ?: return@OnSharedPreferenceChangeListener
+            if (da.length >= 32) {
+                val truncatedData = da.substring(0, 32)
                 sendData(truncatedData)
             }
         }
@@ -81,6 +81,7 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
 
     private fun saveHceConfig() {
         prefs.edit().putString("aid", currentAid).putString("uuid", currentUuid).apply()
+        Log.i("hce save", prefs.getString("uuid", "")!!)
     }
 
     private fun checkNfcStatus() {

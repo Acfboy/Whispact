@@ -60,7 +60,6 @@ impl BLEComm for BLECentral {
         self.handler
             .subscribe(self.uuid, move |msg: Vec<u8>| {
                 let msg = serde_json::from_slice::<Message>(&msg);
-                log::info!("Ble central received notification: {msg:?}");
                 noti_sd
                     .send(msg.expect("received not utf8 string"))
                     .expect("noti_sd send failed");
