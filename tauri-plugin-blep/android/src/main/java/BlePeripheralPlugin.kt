@@ -110,7 +110,7 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
                 BlePeripheralUtils(activity).apply {
                     init()
 
-                    val serviceUuid = UUID.fromString(customUuid)
+                    val serviceUuid = UUID.fromString("12345678-1234-5678-1234-567812345001")
                     val characteristicUuid = UUID.fromString(customUuid)
 
                     callback =
@@ -204,7 +204,7 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
         }
 
         if (!::notifyCharacteristic.isInitialized) {
-            var serviceUuid = UUID.fromString(customUuid)
+            var serviceUuid = UUID.fromString("12345678-1234-5678-1234-567812345001")
             var characteristicUuid = UUID.fromString(customUuid)
             notifyCharacteristic =
                     blePeripheral?.getCharacteristic(serviceUuid, characteristicUuid)!!

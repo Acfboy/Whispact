@@ -1,10 +1,11 @@
 use tauri::{command, plugin::PermissionState, AppHandle, Manager};
+use tauri_plugin_blec::{models::ScanFilter, OnDisconnectHandler};
 use tauri_plugin_blep::{
     mobile::{Message, Plans},
     BlepExt,
 };
 use tauri_plugin_store::StoreExt;
-use tokio::sync::Mutex;
+use tokio::sync::{mpsc, Mutex};
 
 use crate::{
     ble::DeviceBridge,
@@ -108,4 +109,43 @@ pub fn load_finished_plan_list(app: AppHandle) -> Result<FinishedPlanList, Error
     let value = store.get("finished-plan-list").unwrap_or_default();
     let value = serde_json::from_value(value).map_err(|e| Error::Load(e.to_string()))?;
     Ok(value)
+}
+
+#[command]
+pub async fn test_ble_central(app: AppHandle) -> Result<(), Error> {
+    let handler = tauri_plugin_blec::get_handler().unwrap();
+    let (sd, mut rv) = mpsc::channel(100);
+    // log::info!("Ble central scanning...");
+    handler
+        .discover(Some(sd), 3000, ScanFilter::None)
+        .await
+        .map_err(|e| Error::BleCentralDiscover(e.to_string()))?;
+
+    let debug_uuid = uuid::uuid!("12345678-1234-5678-1234-567812345002");
+    while let Some(devices) = rv.recv().await {
+        log::info!("Discovered service: {devices:?}");
+        let target_device = devices.iter().find(|&x| {
+            x.service_data
+                .iter()
+                // .any(|(id, _)| id.as_bytes() == self.uuid.as_bytes())
+                .any(|(id, _)| id.as_bytes() == debug_uuid.as_bytes())
+        });
+        if let Some(device) = target_device {
+            handler
+                .connect(&device.address, OnDisconnectHandler::None)
+                .await
+                .map_err(|e| Error::BleCentralConnect(e.to_string()))?;
+            log::info!("Ble central connected.");
+            break;
+        }
+    }
+
+    log::info!("{:?}", handler.discover_services(&handler.connected_device().await.unwrap().address).await.unwrap());
+
+    handler
+        .subscribe(uuid::uuid!("0000fff1-0000-1000-8000-00805f9b34fb"), move |msg: Vec<u8>| {
+            log::info!("{:?}", msg);
+        })
+        .await.unwrap();
+    Ok(())
 }

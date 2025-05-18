@@ -104,6 +104,7 @@ pub fn run() {
             set_back_to_back_msg,
             set_seal_msg,
             set_plan_sync_msg,
+            test_ble_central
         ])
         .setup(|app| {
             let scope = app.fs_scope();
