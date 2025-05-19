@@ -1,4 +1,4 @@
-v<script setup lang="ts">
+<script setup lang="ts">
 import { computed, onMounted } from "vue";
 import { listen } from "@tauri-apps/api/event";
 import { error } from '@tauri-apps/plugin-log';
@@ -9,10 +9,12 @@ const pageName = {
   "home": "Whispact",
   "seal": "时刻",
   "settings": "设置",
-  "log": "查看日志"
+  "log": "查看日志",
+  "prompt": "打卡瞬间",
+  "disposable":"一次性消息",
 }
 
-const goBackSet = new Set(["log"]);
+const goBackSet = new Set(["log","prompt","disposable"]);
 
 const route = useRoute();
 const currentName = computed(() => route.name as keyof typeof pageName);

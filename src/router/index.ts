@@ -4,6 +4,7 @@ import SealPage from "../views/SealPage.vue";
 import SettingPage from "../views/SettingPage.vue";
 import Disposable from "../components/disposable.vue";
 import LogPage from "../views/LogPage.vue";
+import PromptPage from "../views/PromptPage.vue";
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -29,13 +30,18 @@ const router = createRouter({
     },
     {
       path: "/disposable",
-      name: "Disposable",
+      name: "disposable",
       component: Disposable,
     },
     {
       path: "/log",
       name: "log",
-      component: LogPage,
+      component: LogPage
+    },
+    {
+      path:"/prompt",
+      name:"prompt",
+      component: PromptPage,
     },
   ],
 });
