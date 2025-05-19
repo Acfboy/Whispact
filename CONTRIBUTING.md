@@ -15,8 +15,8 @@
 
 ### 后端
 
-- `cargo fmt` 格式化代码。
-- `cargo clippy` 潜在问题检查。
+- `cargo fmt` 格式化代码。`cargo fmt --all --check --manifest-path ./src-tauri/Cargo.toml`
+- `cargo clippy` 潜在问题检查。`cargo clippy  --target aarch64-linux-android --manifest-path ./src-tauri/Cargo.toml`
 - `cargo test` 运行测试。
 
 ## `TODO.md` / `ROADMAP.md`

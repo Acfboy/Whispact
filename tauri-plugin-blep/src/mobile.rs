@@ -1,3 +1,4 @@
+use crate::error::Error;
 use serde::de::DeserializeOwned;
 use serde_json;
 use tauri::plugin::PermissionState;
@@ -9,7 +10,6 @@ use tauri::{
 use tokio::sync::mpsc;
 use tokio::sync::watch;
 use uuid::Uuid;
-use crate::error::Error;
 
 pub use crate::models::*;
 
@@ -65,10 +65,7 @@ impl<R: Runtime> Blep<R> {
             Ok(())
         });
 
-        let uuid = String::from(
-            uuid.hyphenated()
-                .encode_lower(&mut Uuid::encode_buffer()),
-        );
+        let uuid = String::from(uuid.hyphenated().encode_lower(&mut Uuid::encode_buffer()));
         self.0
             .run_mobile_plugin(
                 "setup",

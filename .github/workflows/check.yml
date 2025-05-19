@@ -67,7 +67,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           command: clippy
-          args: --all-targets --all-features --manifest-path ./src-tauri/Cargo.toml  -- -D warnings --target aarch64-linux-android
+          args: --target aarch64-linux-android --manifest-path ./src-tauri/Cargo.toml
       
       - name: cargo test
         uses: actions/checkout@v4

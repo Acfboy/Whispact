@@ -29,7 +29,7 @@ impl<R: Runtime> Nfc2<R> {
         &self,
         uuid_sender: watch::Sender<Uuid>,
         error_sender: mpsc::UnboundedSender<NfcErrorResponse>,
-        uuid: Uuid
+        uuid: Uuid,
     ) -> crate::Result<()> {
         let data_channel = Channel::new(move |event| {
             let payload = if let InvokeResponseBody::Json(payload) = event {
@@ -58,7 +58,6 @@ impl<R: Runtime> Nfc2<R> {
             Ok(())
         });
 
-        
         let uuid = String::from(uuid.simple().encode_upper(&mut Uuid::encode_buffer()));
         self.0
             .run_mobile_plugin(
@@ -70,6 +69,5 @@ impl<R: Runtime> Nfc2<R> {
                 },
             )
             .map_err(Into::into)
-     
     }
 }

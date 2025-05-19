@@ -2,7 +2,7 @@ import { createRouter, createWebHashHistory } from "vue-router";
 import HomePage from "../views/HomePage.vue";
 import SealPage from "../views/SealPage.vue";
 import SettingPage from "../views/SettingPage.vue";
-import Disposable from "../components/disposable.vue";
+import Disposable from "../views/DisposablePage.vue";
 import LogPage from "../views/LogPage.vue";
 import PromptPage from "../views/PromptPage.vue";
 
@@ -36,11 +36,11 @@ const router = createRouter({
     {
       path: "/log",
       name: "log",
-      component: LogPage
+      component: LogPage,
     },
     {
-      path:"/prompt",
-      name:"prompt",
+      path: "/prompt",
+      name: "prompt",
       component: PromptPage,
     },
   ],
