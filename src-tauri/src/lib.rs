@@ -83,7 +83,7 @@ pub fn run() {
                     Target::new(TargetKind::Stdout),
                 ])
                 .level(log::LevelFilter::Info)
-                .max_file_size(50_000)
+                .max_file_size(10000)
                 .build(),
         )
         .plugin(tauri_plugin_opener::init())
@@ -104,7 +104,6 @@ pub fn run() {
             set_back_to_back_msg,
             set_seal_msg,
             set_plan_sync_msg,
-            test_ble_central
         ])
         .setup(|app| {
             let scope = app.fs_scope();

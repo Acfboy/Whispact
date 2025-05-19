@@ -35,8 +35,8 @@ const router = createRouter({
     {
       path: "/log",
       name: "log",
-      component: LogPage
-    }
+      component: LogPage,
+    },
   ],
 });
 export default router;

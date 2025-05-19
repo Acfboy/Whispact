@@ -60,7 +60,11 @@ pub enum Message {
     /// 打卡“保存这一刻”
     Seal(String),
     /// 同步共同计划
-    PlanSync(Plans)
+    PlanSync(Plans),
+    /// 没有消息需要传递。作为信号量通知 notification 监听已经建立，可以通信。
+    /// 
+    /// 即每次通信由主端先发送信息，发送信息表明监听已经建立，从端可以发送。
+    Empty,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]

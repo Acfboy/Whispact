@@ -30,7 +30,7 @@ onMounted(async () => {
         alert(event.payload);
       }
     );
-    await listen<string>("err", (event: { payload: Object }) => {
+    await listen<string>("err", (event: { payload: object }) => {
       error(JSON.stringify(event.payload));
       alert("error: " + event.payload);
     });

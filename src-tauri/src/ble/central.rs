@@ -40,14 +40,12 @@ impl BLEComm for BLECentral {
             .map_err(|e| Error::BleCentralDiscover(e.to_string()))?;
 
         let handler = self.handler;
-        let debug_uuid = uuid::uuid!("12345678-1234-5678-1234-567812345002");
         while let Some(devices) = rv.recv().await {
             log::info!("Discovered service: {devices:?}");
             let target_device = devices.iter().find(|&x| {
                 x.service_data
                     .iter()
-                    // .any(|(id, _)| id.as_bytes() == self.uuid.as_bytes())
-                    .any(|(id, _)| id.as_bytes() == debug_uuid.as_bytes())
+                    .any(|(id, _)| id.as_bytes() == self.uuid.as_bytes())
             });
             if let Some(device) = target_device {
                 handler

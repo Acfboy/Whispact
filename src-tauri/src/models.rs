@@ -18,6 +18,7 @@ pub enum Error {
     Lucky(String),
     Store(String),
     Load(String),
+    Unsupport(String),
 }
 
 #[derive(Deserialize, Serialize)]
@@ -58,8 +59,8 @@ pub struct FinishedPlanList {
     pub list: FinishedPlan,
 }
 
-impl Into<Error> for tauri_plugin_store::Error {
-    fn into(self) -> Error {
-        Error::Store(self.to_string())
+impl From<tauri_plugin_store::Error> for Error {
+    fn from(value: tauri_plugin_store::Error) -> Self {
+        Error::Store(value.to_string())
     }
 }

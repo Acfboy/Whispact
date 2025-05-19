@@ -9,7 +9,7 @@ use peripheral::BLEPeripheral;
 use std::cmp::Ordering::*;
 use tauri::{async_runtime, AppHandle, Emitter, Wry};
 use tauri_plugin_blep::mobile::{Blep, Message};
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Semaphore};
 use uuid::Uuid;
 
 /// BLE 通信的主从端都会实现的 trait
@@ -29,6 +29,12 @@ pub struct DeviceBridge {
     pub uuid: Uuid,
     message_rx: Option<mpsc::UnboundedReceiver<Message>>,
     next_msg: Option<Message>,
+    /// 之后可能会支持与不同的人通信，故需要记录上一次连接的 uuid，如果新读到的不一致，需要断开并重新连接。
+    last_uuid: Option<Uuid>,
+    /// 作为从端通信的时候需要信号量用于确定主端的监听已经设置。
+    ///
+    /// 具体地，收到主端的信号后接收增加 permit，表示已经可以发送信息。从端在发送信息的时候等待获得一个 permit。
+    notify_semaphore: Option<Arc<Semaphore>>,
 }
 
 impl DeviceBridge {
@@ -40,6 +46,8 @@ impl DeviceBridge {
             uuid,
             message_rx: None,
             next_msg: None,
+            notify_semaphore: None,
+            last_uuid: None,
         }
     }
 
@@ -51,6 +59,14 @@ impl DeviceBridge {
         blep: Arc<Blep<Wry>>,
         handle: AppHandle,
     ) -> Result<(), Error> {
+        if let Some(last) = &self.last_uuid {
+            if uuid.as_bytes() != last.as_bytes() {
+                return Err(Error::Unsupport("暂不支持多次不同触碰".to_string()));
+            }
+        } else {
+            self.last_uuid = Some(uuid);
+        }
+
         let mut commu: Box<dyn BLEComm + Send + Sync> =
             match self.uuid.as_u128().cmp(&uuid.as_u128()) {
                 Greater => {
@@ -62,6 +78,7 @@ impl DeviceBridge {
                     log::info!("Act as BLEPeripheral");
                     let mut commu = BLEPeripheral::new();
                     commu.setup(blep, self.uuid);
+                    self.notify_semaphore = Some(Arc::new(Semaphore::new(0)));
                     Box::new(commu)
                 }
                 Equal => {
@@ -85,14 +102,23 @@ impl DeviceBridge {
         } else {
             self.message_rx.take().unwrap()
         };
+
+        let semaphore = self.notify_semaphore.clone();
+
         async_runtime::spawn(async move {
             while let Some(msg) = rx.recv().await {
                 log::info!("Received: {:?}", msg);
+
+                if let Some(s) = semaphore.clone() {
+                    s.add_permits(1);
+                }
+
                 match msg {
                     Message::Disposable(s) => handle.emit("recv-disposable-msg", s),
                     Message::BackToBack(s) => handle.emit("recv-back-to-back-msg", s),
                     Message::Seal(s) => handle.emit("recv-seal-msg", s),
                     Message::PlanSync(p) => handle.emit("recv-plan-sync", p),
+                    Message::Empty => Ok(()),
                 }
                 .expect("failed to send msg to frontend");
             }
@@ -111,11 +137,20 @@ impl DeviceBridge {
     }
 
     pub async fn send(&mut self) -> Result<(), Error> {
-        if self.next_msg.is_none() {
-            return Ok(());
-        }
         if self.communicater.is_none() {
             return Err(Error::SendBeforeConnect);
+        }
+
+        if let Some(s) = self.notify_semaphore.clone() {
+            // 如果是从端，需要等待许可，即收到对方消息，即监听已经设置，再发送消息。
+            let res = s.acquire().await;
+            if let Err(e) = res {
+                return Err(Error::BlePeripheralSendFail(e.to_string()));
+            }
+        }
+
+        if self.next_msg.is_none() {
+            self.next_msg = Some(Message::Empty);
         }
         self.communicater
             .as_mut()

@@ -29,6 +29,11 @@ class WatchArgs {
     lateinit var uuid: String
 }
 
+@InvokeArg
+class SendArgs {
+    lateinit var message: String
+}
+
 @TauriPlugin(
         permissions =
                 [
@@ -110,7 +115,7 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
                 BlePeripheralUtils(activity).apply {
                     init()
 
-                    val serviceUuid = UUID.fromString("12345678-1234-5678-1234-567812345001")
+                    val serviceUuid = UUID.fromString(customUuid)
                     val characteristicUuid = UUID.fromString(customUuid)
 
                     callback =
@@ -204,7 +209,7 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
         }
 
         if (!::notifyCharacteristic.isInitialized) {
-            var serviceUuid = UUID.fromString("12345678-1234-5678-1234-567812345001")
+            var serviceUuid = UUID.fromString(customUuid)
             var characteristicUuid = UUID.fromString(customUuid)
             notifyCharacteristic =
                     blePeripheral?.getCharacteristic(serviceUuid, characteristicUuid)!!
@@ -230,7 +235,4 @@ class BlePeripheralPlugin(private val activity: Activity) : Plugin(activity) {
         invoke.resolve(ret)
     }
 
-    class SendArgs {
-        lateinit var message: String
-    }
 }
