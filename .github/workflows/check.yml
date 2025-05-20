@@ -40,6 +40,9 @@ jobs:
       - name: Run ESLint
         run: pnpm exec eslint ./src --ext .js,.ts,.jsx,.tsx
 
+      - name: Run tsc
+        run: pnpm tsc --noEmit
+
   backend-checks:
     name: Backend Checks
     runs-on: ubuntu-latest

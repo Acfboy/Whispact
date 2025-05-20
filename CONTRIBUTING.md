@@ -1,5 +1,3 @@
-先 fork 到自己的仓库，再交 pr。互相给对方当 reviewer。
-
 ## 检查
 
 我部署了 Github Action，交 pr 后会自动对代码风格和潜在问题进行检查。
