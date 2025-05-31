@@ -4,7 +4,8 @@ import SealPage from "../views/SealPage.vue";
 import SettingPage from "../views/SettingPage.vue";
 import Disposable from "../views/DisposablePage.vue";
 import LogPage from "../views/LogPage.vue";
-import PromptPage from "../views/PromptPage.vue";
+import MailboxPage from "../views/MailboxPage.vue";
+import PlanPage from "../views/PlanPage.vue";
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -39,9 +40,14 @@ const router = createRouter({
       component: LogPage,
     },
     {
-      path: "/prompt",
-      name: "prompt",
-      component: PromptPage,
+      path: "/mailbox",
+      name: "mailbox",
+      component: MailboxPage,
+    },
+    {
+      path: "/plan",
+      name: "plan",
+      component: PlanPage,
     },
   ],
 });

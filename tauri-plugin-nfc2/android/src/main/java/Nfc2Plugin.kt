@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
+import android.content.ComponentName
 import android.nfc.*
 import android.nfc.NfcAdapter
 import android.nfc.cardemulation.*
@@ -42,16 +43,19 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
     private var errorChannel: Channel? = null
     private lateinit var prefs: SharedPreferences
 
-    private val sharedPreferencesChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
-        if (key == "be_readed") {
-            Log.i("be_readed", "changed")
-            val da = sharedPreferences.getString(key, "") ?: return@OnSharedPreferenceChangeListener
-            if (da.length >= 32) {
-                val truncatedData = da.substring(0, 32)
-                sendData(truncatedData)
+    private val sharedPreferencesChangeListener =
+            SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
+                if (key == "be_readed") {
+                    Log.i("be_readed", "changed")
+                    val da =
+                            sharedPreferences.getString(key, "")
+                                    ?: return@OnSharedPreferenceChangeListener
+                    if (da.length >= 32) {
+                        val truncatedData = da.substring(0, 32)
+                        sendData(truncatedData)
+                    }
+                }
             }
-        }
-    }
 
     private val pendingIntent: PendingIntent by lazy {
         PendingIntent.getActivity(
@@ -70,8 +74,17 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
         currentUuid = args.uuid
         prefs = activity.getSharedPreferences("nfc_plugin", Activity.MODE_PRIVATE)
         saveHceConfig()
+        // val cardEmulation = CardEmulation.getInstance(NfcAdapter.getDefaultAdapter(activity))
+        // if (cardEmulation != null) {
+        //     val componentName = ComponentName(activity, HceService::class.java)
+        //     val success = cardEmulation.setPreferredService(activity, componentName)
+        //     if (!success) {
+        //         sendError("SET_PREFERRED_SERVICE_FAILED", "Failed to set preferred service")
+        //     }
+        // } else {
+        //     sendError("NFC_ADAPTER_NOT_AVAILABLE", "NFC adapter is not available")
+        // }
         checkNfcStatus()
-        prefs.registerOnSharedPreferenceChangeListener(sharedPreferencesChangeListener)
     }
     @Command
     fun stopHce(invoke: Invoke) {

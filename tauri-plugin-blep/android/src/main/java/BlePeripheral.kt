@@ -149,8 +149,8 @@ class BlePeripheralUtils(private val context: Context) {
         val settings = AdvertiseSettings.Builder()
             .setConnectable(true)
             .setTimeout(0)
-            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
-            .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+            .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM)
             .build()
 
         val advertiseData = AdvertiseData.Builder()
