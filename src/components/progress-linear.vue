@@ -1,25 +1,13 @@
 <template>
-    <div>
-  <v-card class="`ma-${ma}`">
-    <v-progress-linear
-      :model-value="progress"
-      :height="height"
-      @mousedown="handleStart"
-      @mouseup="handleEnd"
-      @mouseleave="handleEnd"
-      @touchstart.prevent="handleStart"
-      @touchend="handleEnd"
-       >
-  </v-progress-linear>
-      <v-card-text
-      @mousedown="handleStart"
-      @mouseup="handleEnd"
-      @mouseleave="handleEnd"
-      @touchstart.prevent="handleStart"
-      @touchend="handleEnd"
-      > 
-      <slot />
-      {{ props.message }}
+  <div>
+    <v-card class="`ma-${ma}`">
+      <v-progress-linear :model-value="progress" :height="height" @mousedown="handleStart" @mouseup="handleEnd"
+        @mouseleave="handleEnd" @touchstart.prevent="handleStart" @touchend="handleEnd">
+      </v-progress-linear>
+      <v-card-text @mousedown="handleStart" @mouseup="handleEnd" @mouseleave="handleEnd"
+        @touchstart.prevent="handleStart" @touchend="handleEnd">
+        <slot />
+        {{ props.message }}
       </v-card-text>
     </v-card>
   </div>
@@ -42,7 +30,7 @@ const props = defineProps({
     default: 1000
   },
   message: {
-    type: String, 
+    type: String,
     default: ""
   }
 })
@@ -63,7 +51,7 @@ function handleStart() {
       clearInterval(timer)
       timer = null
     }
-  }, 16) 
+  }, 16)
 }
 
 function handleEnd() {
@@ -74,4 +62,4 @@ function handleEnd() {
   progress.value = 0
   emit('endPress')
 }
-</script> 
+</script>
