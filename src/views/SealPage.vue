@@ -21,11 +21,11 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import touchPrompt from "../components/touch-prompt.vue"
+import touchPrompt from "@/components/touch-prompt.vue"
 import { useRouter } from "vue-router";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { Instance, SealedInstances } from "../types";
+import { Instance, SealedInstances } from "@/types";
 
 const msg = ref("");
 const syncTouch = ref(false);

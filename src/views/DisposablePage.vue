@@ -3,5 +3,5 @@
 </template>
 
 <script setup>
-import progressLine from "../components/progress-linear.vue";
+import progressLine from "@/components/progress-linear.vue";
 </script>
