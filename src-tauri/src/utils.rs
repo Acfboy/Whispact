@@ -8,7 +8,7 @@ use tokio::sync::Mutex;
 
 use crate::{
     ble::DeviceBridge,
-    models::{BackToBackDrafs, DisposableDrafts, Error, FinishedPlanList, SealedInstances},
+    models::{DisposableDrafts, Error, FinishedPlanList, PlanDrafts, SealedInstances},
 };
 
 #[command]
@@ -16,14 +16,6 @@ pub async fn set_disposable_msg(app: AppHandle, msg: String) -> Result<(), Error
     let state = app.state::<Mutex<DeviceBridge>>();
     let mut guard = state.lock().await;
     (*guard).set_msg(Message::Disposable(msg))?;
-    Ok(())
-}
-
-#[command]
-pub async fn set_back_to_back_msg(app: AppHandle, msg: String) -> Result<(), Error> {
-    let state = app.state::<Mutex<DeviceBridge>>();
-    let mut guard = state.lock().await;
-    (*guard).set_msg(Message::BackToBack(msg))?;
     Ok(())
 }
 
@@ -66,21 +58,6 @@ pub fn load_disposable_drafts(app: AppHandle) -> Result<DisposableDrafts, Error>
 }
 
 #[command]
-pub fn store_back_to_back_drafts(app: AppHandle, data: BackToBackDrafs) -> Result<(), Error> {
-    let store = app.store("store.json").map_err(Into::<Error>::into)?;
-    store.set("back-to-back-drafts", serde_json::to_value(&data).unwrap());
-    Ok(())
-}
-
-#[command]
-pub fn load_back_to_back_drafts(app: AppHandle) -> Result<BackToBackDrafs, Error> {
-    let store = app.store("store.json").map_err(Into::<Error>::into)?;
-    let value = store.get("back-to-back-drafts").unwrap_or_default();
-    let value = serde_json::from_value(value).map_err(|e| Error::Load(e.to_string()))?;
-    Ok(value)
-}
-
-#[command]
 pub fn store_sealed_instances(app: AppHandle, data: SealedInstances) -> Result<(), Error> {
     let store = app.store("store.json").map_err(Into::<Error>::into)?;
     store.set("sealed-instances", serde_json::to_value(&data).unwrap());
@@ -93,6 +70,21 @@ pub fn load_sealed_instances(app: AppHandle) -> Result<SealedInstances, Error> {
     let value = store.get("sealed-instances").unwrap_or_default();
     let value = serde_json::from_value(value).map_err(|e| Error::Load(e.to_string()))?;
     Ok(value)
+}
+
+#[command]
+pub fn load_plan_drafts(app: AppHandle) -> Result<PlanDrafts, Error> {
+    let store = app.store("store.json").map_err(Into::<Error>::into)?;
+    let value = store.get("plan-drafts").unwrap_or_default();
+    let value = serde_json::from_value(value).map_err(|e| Error::Load(e.to_string()))?;
+    Ok(value)
+}
+
+#[command]
+pub fn store_plan_drafts(app: AppHandle, data: PlanDrafts) -> Result<(), Error> {
+    let store = app.store("store.json").map_err(Into::<Error>::into)?;
+    store.set("plan-drafts", serde_json::to_value(&data).unwrap());
+    Ok(())
 }
 
 #[command]

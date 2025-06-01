@@ -1,5 +1,8 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
-use tauri_plugin_blep::mobile::Plan;
+use tauri_plugin_blep::mobile::{Message, Plan};
+use uuid::Uuid;
 
 #[derive(Debug, Serialize, Clone)]
 pub enum Error {
@@ -33,11 +36,6 @@ pub struct DisposableDrafts {
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct BackToBackDrafs {
-    pub drafts: Vec<MessageDraft>,
-}
-
-#[derive(Deserialize, Serialize)]
 pub struct Instance {
     pub instance: String,
     pub time: String,
@@ -55,6 +53,11 @@ pub struct FinishedPlan {
 }
 
 #[derive(Deserialize, Serialize)]
+pub struct PlanDrafts {
+    pub drafts: HashMap<Uuid, Plan>,
+}
+
+#[derive(Deserialize, Serialize)]
 pub struct FinishedPlanList {
     pub list: FinishedPlan,
 }
@@ -62,5 +65,24 @@ pub struct FinishedPlanList {
 impl From<tauri_plugin_store::Error> for Error {
     fn from(value: tauri_plugin_store::Error) -> Self {
         Error::Store(value.to_string())
+    }
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+pub enum MessageType {
+    Disposable,
+    Seal,
+    PlanSync,
+    Empty,
+}
+
+impl MessageType {
+    pub fn from(val: &Message) -> Self {
+        match val {
+            Message::Disposable(_) => Self::Disposable,
+            Message::Empty => Self::Empty,
+            Message::PlanSync(_) => Self::PlanSync,
+            Message::Seal(_) => Self::Seal,
+        }
     }
 }

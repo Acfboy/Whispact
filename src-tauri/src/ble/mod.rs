@@ -2,7 +2,7 @@ pub mod central;
 pub mod peripheral;
 use std::sync::Arc;
 
-use crate::models::Error;
+use crate::models::{Error, MessageType};
 use async_trait::async_trait;
 use central::BLECentral;
 use peripheral::BLEPeripheral;
@@ -113,14 +113,15 @@ impl DeviceBridge {
                     s.add_permits(1);
                 }
 
-                match msg {
+                match &msg {
                     Message::Disposable(s) => handle.emit("recv-disposable-msg", s),
-                    Message::BackToBack(s) => handle.emit("recv-back-to-back-msg", s),
                     Message::Seal(s) => handle.emit("recv-seal-msg", s),
                     Message::PlanSync(p) => handle.emit("recv-plan-sync", p),
                     Message::Empty => Ok(()),
                 }
                 .expect("failed to send msg to frontend");
+
+                handle.emit("touching", MessageType::from(&msg)).unwrap();
             }
         });
         log::info!("Message event emmiter set.");

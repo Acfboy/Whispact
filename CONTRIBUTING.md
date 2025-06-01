@@ -9,7 +9,6 @@
 - `pnpm prettier --check "src/**/*.{js,ts,jsx,tsx,css,scss,html}"`
 - `pnpm eslint src/ --ext .js,.ts,.jsx,.tsx`
 
-可能后面会引入 `jest` 做前端测试框架。
 
 ### 后端
 

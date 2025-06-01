@@ -55,8 +55,6 @@ pub enum ConnectionStatus {
 pub enum Message {
     /// 一次性消息
     Disposable(String),
-    /// 背对背消息
-    BackToBack(String),
     /// 打卡“保存这一刻”
     Seal(String),
     /// 同步共同计划
