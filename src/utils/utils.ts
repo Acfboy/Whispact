@@ -16,7 +16,7 @@ function randString() {
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
 
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < 15; i++) {
     const randomIndex = Math.floor(Math.random() * chars.length);
     result += chars.charAt(randomIndex);
   }
@@ -46,5 +46,13 @@ export async function genRandomPlan() {
     };
     plans.drafts.set(uuid, rand);
   }
+  try {
   await invoke("store_plan_drafts", { data: plans });
+  } catch(e) {
+    alert(e)
+  }
+}
+
+export function randomUUID(): string {
+  return crypto.randomUUID();
 }

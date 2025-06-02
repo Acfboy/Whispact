@@ -59,7 +59,7 @@ pub struct PlanDrafts {
 
 #[derive(Deserialize, Serialize)]
 pub struct FinishedPlanList {
-    pub list: FinishedPlan,
+    pub list: Vec<FinishedPlan>,
 }
 
 impl From<tauri_plugin_store::Error> for Error {

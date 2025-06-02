@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 import touchPrompt from "@/components/touch-prompt.vue"
 import { useRouter } from "vue-router";
 import { listen } from "@tauri-apps/api/event";
@@ -38,6 +38,7 @@ const onClick = async () => {
 }
 
 const jumpToPlan = () => {
+  sessionStorage.setItem("tab", "Finished");
   let router = useRouter();
   router.push({ name: "plan" })
 }
@@ -61,7 +62,7 @@ const onTouch = async (event: { payload: string }) => {
   }
 }
 
-onMounted(async () => {
+(async () => {
   await listen<string>("recv-seal-msg", onTouch);
-});
+})();
 </script>

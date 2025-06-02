@@ -6,6 +6,7 @@ import Disposable from "@/views/DisposablePage.vue";
 import LogPage from "@/views/LogPage.vue";
 import MailboxPage from "@/views/MailboxPage.vue";
 import PlanPage from "@/views/PlanPage.vue";
+import EditView from "@/views/EditView.vue";
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -49,6 +50,12 @@ const router = createRouter({
       name: "plan",
       component: PlanPage,
     },
+    {
+      path: '/edit/:type/:id?', 
+      name: 'edit',
+      component: EditView,
+      props: true
+    }
   ],
 });
 export default router;
