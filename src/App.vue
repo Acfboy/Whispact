@@ -14,10 +14,11 @@ const pageName = {
   "prompt": "打卡瞬间",
   "disposable": "一次性消息",
   "mailbox": "信箱",
-  "seal": "打卡此刻"
+  "seal": "打卡此刻",
+  "edit": "编辑"
 }
 
-const goBackSet = new Set(["log", "prompt", "disposable", "settings", "seal"]);
+const goBackSet = new Set(["log", "prompt", "disposable", "settings", "seal", "edit"]);
 
 const route = useRoute();
 const currentName = computed(() => route.name as keyof typeof pageName);
@@ -39,7 +40,7 @@ const errorBar = ref(false);
 
 const drawer = ref(false);
 
-onMounted(async () => {
+(async () => {
   await listen<string>(
     "recv-disposable-msg",
     (event: { payload: string }) => {
@@ -51,6 +52,9 @@ onMounted(async () => {
     errorMsg.value = JSON.stringify(event.payload);
     errorBar.value = true;
   });
+})();
+
+onMounted(async () => {
   await invoke("request_blep_bluetooth_permissions", {});
 });
 </script>

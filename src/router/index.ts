@@ -1,11 +1,12 @@
 import { createRouter, createWebHashHistory } from "vue-router";
-import HomePage from "../views/HomePage.vue";
-import SealPage from "../views/SealPage.vue";
-import SettingPage from "../views/SettingPage.vue";
-import Disposable from "../views/DisposablePage.vue";
-import LogPage from "../views/LogPage.vue";
-import MailboxPage from "../views/MailboxPage.vue";
-import PlanPage from "../views/PlanPage.vue";
+import HomePage from "@/views/HomePage.vue";
+import SealPage from "@/views/SealPage.vue";
+import SettingPage from "@/views/SettingPage.vue";
+import Disposable from "@/views/DisposablePage.vue";
+import LogPage from "@/views/LogPage.vue";
+import MailboxPage from "@/views/MailboxPage.vue";
+import PlanPage from "@/views/PlanPage.vue";
+import EditView from "@/views/EditView.vue";
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -49,6 +50,12 @@ const router = createRouter({
       name: "plan",
       component: PlanPage,
     },
+    {
+      path: '/edit/:type/:id?', 
+      name: 'edit',
+      component: EditView,
+      props: true
+    }
   ],
 });
 export default router;

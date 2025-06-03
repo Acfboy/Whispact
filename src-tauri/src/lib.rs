@@ -92,8 +92,6 @@ pub fn run() {
         .plugin(tauri_plugin_nfc2::init())
         .invoke_handler(tauri::generate_handler![
             request_blep_bluetooth_permissions,
-            store_back_to_back_drafts,
-            load_back_to_back_drafts,
             store_sealed_instances,
             load_sealed_instances,
             store_finished_plan_list,
@@ -101,9 +99,10 @@ pub fn run() {
             store_disposable_drafts,
             load_disposable_drafts,
             set_disposable_msg,
-            set_back_to_back_msg,
             set_seal_msg,
             set_plan_sync_msg,
+            load_plan_drafts,
+            store_plan_drafts
         ])
         .setup(|app| {
             let scope = app.fs_scope();

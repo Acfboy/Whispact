@@ -1,23 +1,11 @@
 <template>
   <div>
-    <v-card :class="`ma-${ma}`">
-      <v-progress-linear
-        :model-value="progress"
-        :height="height"
-        @mousedown="handleStart"
-        @mouseup="handleEnd"
-        @mouseleave="handleEnd"
-        @touchstart.prevent="handleStart"
-        @touchend="handleEnd"
-      >
+    <v-card class="`ma-${ma}`">
+      <v-progress-linear :model-value="progress" :height="height" @mousedown="handleStart" @mouseup="handleEnd"
+        @mouseleave="handleEnd" @touchstart.prevent="handleStart" @touchend="handleEnd">
       </v-progress-linear>
-      <v-card-text
-        @mousedown="handleStart"
-        @mouseup="handleEnd"
-        @mouseleave="handleEnd"
-        @touchstart.prevent="handleStart"
-        @touchend="handleEnd"
-      >
+      <v-card-text @mousedown="handleStart" @mouseup="handleEnd" @mouseleave="handleEnd"
+        @touchstart.prevent="handleStart" @touchend="handleEnd">
         <slot />
         {{ props.message }}
       </v-card-text>

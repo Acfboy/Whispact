@@ -31,7 +31,7 @@ importers:
         version: 3.5.3
       vite-plugin-vuetify:
         specifier: ^2.1.1
-        version: 2.1.1(vite@6.2.5)(vue@3.5.13(typescript@5.6.3))(vuetify@3.8.5)
+        version: 2.1.1(vite@6.2.5(@types/node@22.15.29))(vue@3.5.13(typescript@5.6.3))(vuetify@3.8.5)
       vue:
         specifier: ^3.5.13
         version: 3.5.13(typescript@5.6.3)
@@ -48,9 +48,12 @@ importers:
       '@tauri-apps/cli':
         specifier: ^2
         version: 2.4.1
+      '@types/node':
+        specifier: ^22.15.29
+        version: 22.15.29
       '@vitejs/plugin-vue':
         specifier: ^5.2.1
-        version: 5.2.3(vite@6.2.5)(vue@3.5.13(typescript@5.6.3))
+        version: 5.2.3(vite@6.2.5(@types/node@22.15.29))(vue@3.5.13(typescript@5.6.3))
       eslint:
         specifier: ^9.23.0
         version: 9.23.0
@@ -60,6 +63,9 @@ importers:
       globals:
         specifier: ^16.0.0
         version: 16.0.0
+      path:
+        specifier: ^0.12.7
+        version: 0.12.7
       typescript:
         specifier: ~5.6.2
         version: 5.6.3
@@ -68,7 +74,7 @@ importers:
         version: 8.29.0(eslint@9.23.0)(typescript@5.6.3)
       vite:
         specifier: ^6.0.3
-        version: 6.2.5
+        version: 6.2.5(@types/node@22.15.29)
       vue-tsc:
         specifier: ^2.1.10
         version: 2.2.8(typescript@5.6.3)
@@ -520,6 +526,9 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
+  '@types/node@22.15.29':
+    resolution: {integrity: sha512-LNdjOkUDlU1RZb8e1kOIUpN1qQUlzGkEtbVNo53vbrwDg5om6oduhm4SiUaPW5ASTXhAiP0jInWG8Qx9fVlOeQ==}
+
   '@typescript-eslint/eslint-plugin@8.29.0':
     resolution: {integrity: sha512-PAIpk/U7NIS6H7TEtN45SPGLQaHNgB7wSjsQV/8+KYokAb2T/gloOA/Bee2yd4/yKVhPKe5LlaUGhAZk5zmSaQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -860,6 +869,9 @@ packages:
     resolution: {integrity: sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==}
     engines: {node: '>=0.8.19'}
 
+  inherits@2.0.3:
+    resolution: {integrity: sha512-x00IRNXNy63jwGkJmzPigoySHbaqpNuzKbBOmzK+g2OdZpQ9w+sxCN+VSB3ja7IAge2OP2qpfxTjeNcyjmW1uw==}
+
   is-extglob@2.1.1:
     resolution: {integrity: sha512-SbKbANkN603Vi4jEZv49LeVJMn4yGwsbzZworEoyEiutsN3nJYdbO36zfhGJ6QEDpOZIFkDtnq5JRxmvl3jsoQ==}
     engines: {node: '>=0.10.0'}
@@ -967,6 +979,9 @@ packages:
     resolution: {integrity: sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==}
     engines: {node: '>=8'}
 
+  path@0.12.7:
+    resolution: {integrity: sha512-aXXC6s+1w7otVF9UletFkFcDsJeO7lSZBPUQhtb5O0xJe8LtYhj/GxldoL09bBj9+ZmE2hNoHqQSFMN5fikh4Q==}
+
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
@@ -990,6 +1005,10 @@ packages:
     resolution: {integrity: sha512-QQtaxnoDJeAkDvDKWCLiwIXkTgRhwYDEQCghU9Z6q03iyek/rxRh/2lC3HB7P8sWT2xC/y5JDctPLBIGzHKbhw==}
     engines: {node: '>=14'}
     hasBin: true
+
+  process@0.11.10:
+    resolution: {integrity: sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A==}
+    engines: {node: '>= 0.6.0'}
 
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
@@ -1065,6 +1084,9 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  undici-types@6.21.0:
+    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
+
   upath@2.0.1:
     resolution: {integrity: sha512-1uEe95xksV1O0CYKXo8vQvN1JEbtJp7lb7C5U9HMsIp6IVwntkH/oNUzyVNQSd4S1sYk2FpSSW44FqMc8qee5w==}
     engines: {node: '>=4'}
@@ -1074,6 +1096,9 @@ packages:
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
+
+  util@0.10.4:
+    resolution: {integrity: sha512-0Pm9hTQ3se5ll1XihRic3FDIku70C+iHUdT/W926rSgHV5QgXsYbKZN8MSC3tJtSkhuROzvsQjAaFENRXr+19A==}
 
   vite-plugin-vuetify@2.1.1:
     resolution: {integrity: sha512-Pb7bKhQH8qPMzURmEGq2aIqCJkruFNsyf1NcrrtnjsOIkqJPMcBbiP0oJoO8/uAmyB5W/1JTbbUEsyXdMM0QHQ==}
@@ -1484,6 +1509,10 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
+  '@types/node@22.15.29':
+    dependencies:
+      undici-types: 6.21.0
+
   '@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0)(typescript@5.6.3))(eslint@9.23.0)(typescript@5.6.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.1
@@ -1561,9 +1590,9 @@ snapshots:
       '@typescript-eslint/types': 8.29.0
       eslint-visitor-keys: 4.2.0
 
-  '@vitejs/plugin-vue@5.2.3(vite@6.2.5)(vue@3.5.13(typescript@5.6.3))':
+  '@vitejs/plugin-vue@5.2.3(vite@6.2.5(@types/node@22.15.29))(vue@3.5.13(typescript@5.6.3))':
     dependencies:
-      vite: 6.2.5
+      vite: 6.2.5(@types/node@22.15.29)
       vue: 3.5.13(typescript@5.6.3)
 
   '@volar/language-core@2.4.12':
@@ -1909,6 +1938,8 @@ snapshots:
 
   imurmurhash@0.1.4: {}
 
+  inherits@2.0.3: {}
+
   is-extglob@2.1.1: {}
 
   is-glob@4.0.3:
@@ -2004,6 +2035,11 @@ snapshots:
 
   path-key@3.1.1: {}
 
+  path@0.12.7:
+    dependencies:
+      process: 0.11.10
+      util: 0.10.4
+
   picocolors@1.1.1: {}
 
   picomatch@2.3.1: {}
@@ -2022,6 +2058,8 @@ snapshots:
   prelude-ls@1.2.1: {}
 
   prettier@3.5.3: {}
+
+  process@0.11.10: {}
 
   punycode@2.3.1: {}
 
@@ -2101,6 +2139,8 @@ snapshots:
 
   typescript@5.6.3: {}
 
+  undici-types@6.21.0: {}
+
   upath@2.0.1: {}
 
   uri-js@4.4.1:
@@ -2109,23 +2149,28 @@ snapshots:
 
   util-deprecate@1.0.2: {}
 
-  vite-plugin-vuetify@2.1.1(vite@6.2.5)(vue@3.5.13(typescript@5.6.3))(vuetify@3.8.5):
+  util@0.10.4:
+    dependencies:
+      inherits: 2.0.3
+
+  vite-plugin-vuetify@2.1.1(vite@6.2.5(@types/node@22.15.29))(vue@3.5.13(typescript@5.6.3))(vuetify@3.8.5):
     dependencies:
       '@vuetify/loader-shared': 2.1.0(vue@3.5.13(typescript@5.6.3))(vuetify@3.8.5)
       debug: 4.4.0
       upath: 2.0.1
-      vite: 6.2.5
+      vite: 6.2.5(@types/node@22.15.29)
       vue: 3.5.13(typescript@5.6.3)
       vuetify: 3.8.5(typescript@5.6.3)(vite-plugin-vuetify@2.1.1)(vue@3.5.13(typescript@5.6.3))
     transitivePeerDependencies:
       - supports-color
 
-  vite@6.2.5:
+  vite@6.2.5(@types/node@22.15.29):
     dependencies:
       esbuild: 0.25.2
       postcss: 8.5.3
       rollup: 4.39.0
     optionalDependencies:
+      '@types/node': 22.15.29
       fsevents: 2.3.3
 
   vscode-uri@3.1.0: {}
@@ -2169,7 +2214,7 @@ snapshots:
       vue: 3.5.13(typescript@5.6.3)
     optionalDependencies:
       typescript: 5.6.3
-      vite-plugin-vuetify: 2.1.1(vite@6.2.5)(vue@3.5.13(typescript@5.6.3))(vuetify@3.8.5)
+      vite-plugin-vuetify: 2.1.1(vite@6.2.5(@types/node@22.15.29))(vue@3.5.13(typescript@5.6.3))(vuetify@3.8.5)
 
   which@2.0.2:
     dependencies:
