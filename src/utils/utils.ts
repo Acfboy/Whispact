@@ -1,10 +1,11 @@
 import { Instance, Plan, PlanDrafts, SealedInstances } from "@/types";
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, InvokeArgs } from "@tauri-apps/api/core";
+import { emit } from "@tauri-apps/api/event";
 import { error } from "@tauri-apps/plugin-log";
 
 export async function testCommnication() {
   try {
-    await invoke("set_disposable_msg", { msg: "Hello World!" });
+    await try_invoke("set_disposable_msg", { msg: "Hello World!" });
   } catch (e: unknown) {
     error(String(e));
     alert(e);
@@ -33,7 +34,7 @@ export async function genRandomSeal() {
     };
     sealed.instances.push(rand);
   }
-  await invoke("store_sealed_instances", { data: sealed });
+  await try_invoke("store_sealed_instances", { data: sealed });
 }
 
 export async function genRandomPlan() {
@@ -47,7 +48,7 @@ export async function genRandomPlan() {
     plans.drafts.set(uuid, rand);
   }
   try {
-    await invoke("store_plan_drafts", { data: plans });
+    await try_invoke("store_plan_drafts", { data: plans });
   } catch (e) {
     alert(e);
   }
@@ -61,4 +62,33 @@ export function getTimeStamp() {
 
 export function randomUUID(): string {
   return crypto.randomUUID();
+}
+
+export async function try_invoke<T>(
+  command: string,
+  argv?: InvokeArgs,
+): Promise<T | undefined> {
+  try {
+    return await invoke<T>(command, argv);
+  } catch (e) {
+    emit("err", e);
+    return undefined;
+  }
+}
+
+export function timeStampUuid(): string {
+  const uuidTime = BigInt(Date.now());
+
+  const timeLow = Number(uuidTime & BigInt(0xffff));
+  const timeHigh = Number((uuidTime >> BigInt(16)) & BigInt(0xffff_ffff));
+
+  const rand1 = Math.floor(Math.random() * 0xfff);
+  const rand2 = Math.floor(Math.random() * 0xffff);
+  const rand3 = Math.floor(Math.random() * 0xffff_ffff_ffff);
+
+  return `${timeHigh.toString(16).padStart(8, "0")}-${timeLow
+    .toString(16)
+    .padStart(4, "0")}-1${rand1.toString(16).padStart(3, "0")}-${rand2
+    .toString(16)
+    .padStart(4, "0")}-${rand3.toString(16).padStart(12, "0")}`;
 }

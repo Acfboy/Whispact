@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from "vue";
 import { listen } from "@tauri-apps/api/event";
 import { error } from '@tauri-apps/plugin-log';
 import { useRoute, useRouter } from "vue-router";
-import { invoke } from "@tauri-apps/api/core";
+import { try_invoke } from "./utils/utils";
 // import { navigateTo } from "./utils";
 
 const pageName = {
@@ -55,7 +55,7 @@ const drawer = ref(false);
 })();
 
 onMounted(async () => {
-  await invoke("request_blep_bluetooth_permissions", {});
+  await try_invoke("request_blep_bluetooth_permissions", {});
 });
 </script>
 

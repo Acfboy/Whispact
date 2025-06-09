@@ -39,7 +39,7 @@ pub async fn set_plan_sync_msg(app: AppHandle, plan: Plans) -> Result<(), Error>
 pub async fn clear_msg(app: AppHandle) -> Result<(), Error> {
     let state = app.state::<Mutex<DeviceBridge>>();
     let mut guard = state.lock().await;
-    (*guard).set_msg(Message::Empty)?;
+    (*guard).clear_msg()?;
     Ok(())
 }
 
@@ -60,8 +60,12 @@ pub fn store_disposable_drafts(app: AppHandle, data: DisposableDrafts) -> Result
 #[command]
 pub fn load_disposable_drafts(app: AppHandle) -> Result<DisposableDrafts, Error> {
     let store = app.store("store.json").map_err(Into::<Error>::into)?;
-    let value = store.get("disposable-drafts").unwrap_or_default();
-    let value = serde_json::from_value(value).map_err(|e| Error::Load(e.to_string()))?;
+    let value = store.get("disposable-drafts");
+    let value = if let Some(v) = value {
+        serde_json::from_value(v).map_err(|e| Error::Load(e.to_string()))?
+    } else {
+        DisposableDrafts::default()
+    };
     Ok(value)
 }
 
@@ -75,16 +79,24 @@ pub fn store_sealed_instances(app: AppHandle, data: SealedInstances) -> Result<(
 #[command]
 pub fn load_sealed_instances(app: AppHandle) -> Result<SealedInstances, Error> {
     let store = app.store("store.json").map_err(Into::<Error>::into)?;
-    let value = store.get("sealed-instances").unwrap_or_default();
-    let value = serde_json::from_value(value).map_err(|e| Error::Load(e.to_string()))?;
+    let value = store.get("sealed-instances");
+    let value = if let Some(v) = value {
+        serde_json::from_value(v).map_err(|e| Error::Load(e.to_string()))?
+    } else {
+        SealedInstances::default()
+    };
     Ok(value)
 }
 
 #[command]
 pub fn load_plan_drafts(app: AppHandle) -> Result<PlanDrafts, Error> {
     let store = app.store("store.json").map_err(Into::<Error>::into)?;
-    let value = store.get("plan-drafts").unwrap_or_default();
-    let value = serde_json::from_value(value).map_err(|e| Error::Load(e.to_string()))?;
+    let value = store.get("plan-drafts");
+    let value = if let Some(v) = value {
+        serde_json::from_value(v).map_err(|e| Error::Load(e.to_string()))?
+    } else {
+        PlanDrafts::default()
+    };
     Ok(value)
 }
 
@@ -105,7 +117,11 @@ pub fn store_finished_plan_list(app: AppHandle, data: FinishedPlanList) -> Resul
 #[command]
 pub fn load_finished_plan_list(app: AppHandle) -> Result<FinishedPlanList, Error> {
     let store = app.store("store.json").map_err(Into::<Error>::into)?;
-    let value = store.get("finished-plan-list").unwrap_or_default();
-    let value = serde_json::from_value(value).map_err(|e| Error::Load(e.to_string()))?;
+    let value = store.get("finished-plan-list");
+    let value = if let Some(v) = value {
+        serde_json::from_value(v).map_err(|e| Error::Load(e.to_string()))?
+    } else {
+        FinishedPlanList::default()
+    };
     Ok(value)
 }

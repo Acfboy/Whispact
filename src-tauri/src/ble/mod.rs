@@ -128,8 +128,13 @@ impl DeviceBridge {
         Ok(())
     }
 
+    pub fn clear_msg(&mut self) -> Result<(), Error> {
+        self.next_msg = None;
+        Ok(())
+    }
+
     pub fn set_msg(&mut self, msg: Message) -> Result<(), Error> {
-        if self.next_msg.is_some() {
+        if self.next_msg.is_some() && !matches!(self.next_msg.as_ref(), Some(Message::Empty)) {
             return Err(Error::LastMessageNotSend);
         }
         log::info!("Next message set: {msg:?}");

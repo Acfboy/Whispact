@@ -9,10 +9,10 @@
           查看日志
         </v-btn>
         <v-btn variant="outlined" @click="genRandomSeal" class="ma-1">
-          添加随机打卡
+          随机打卡
         </v-btn>
         <v-btn variant="outlined" @click="genRandomPlan" class="ma-1">
-          添加未完成计划
+          随机未完成计划
         </v-btn>
       </v-card-text>
     </v-card>

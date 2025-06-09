@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import { invoke } from '@tauri-apps/api/core';
+import { try_invoke } from '@/utils/utils';
 import { ref } from 'vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router';
 
@@ -40,10 +40,10 @@ const textTitle = ref(route.query.title || "");
 
 onBeforeRouteLeave(async () => {
   if (props.type == "Plan") {
-    let data: { drafts: object } = await invoke("load_plan_drafts");
+    let data: { drafts: object } = (await try_invoke("load_plan_drafts"))!;
     let drafts = new Map(Object.entries(data.drafts));
     drafts.set(props.id, { title: textTitle.value, body: textBody.value });
-    await invoke("store_plan_drafts", { data: { drafts } });
+    await try_invoke("store_plan_drafts", { data: { drafts } });
   }
 });
 

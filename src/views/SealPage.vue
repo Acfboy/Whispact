@@ -25,8 +25,8 @@ import { ref, watchEffect } from "vue";
 import touchPrompt from "@/components/touch-prompt.vue"
 import { useRouter } from "vue-router";
 import { listen } from "@tauri-apps/api/event";
-import { invoke } from "@tauri-apps/api/core";
 import { Instance, SealedInstances } from "@/types";
+import { try_invoke } from "@/utils/utils";
 
 const msg = ref("");
 const syncTouch = ref(false);
@@ -34,7 +34,7 @@ const errorBar = ref(false);
 const success = ref(false);
 
 const onClick = async () => {
-  await invoke("set_seal_msg", { msg: msg.value });
+  try_invoke("set_seal_msg", { msg: msg.value });
   syncTouch.value = true;
 }
 
@@ -52,12 +52,12 @@ const onTouch = async (event: { payload: string }) => {
     syncTouch.value = false;
     errorBar.value = true;
   } else {
-    let sealed: SealedInstances = await invoke("load_sealed_instances", {});
+    let sealed: SealedInstances = (await try_invoke("load_sealed_instances", {}))!;
     const d = new Date();
     const timestamp = d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
     const instance: Instance = { time: timestamp, instance: msg.value };
     sealed.instances.push(instance);
-    await invoke("store_sealed_instances", { data: sealed });
+    await try_invoke("store_sealed_instances", { data: sealed });
     syncTouch.value = false;
     success.value = true;
   }
@@ -65,7 +65,7 @@ const onTouch = async (event: { payload: string }) => {
 
 watchEffect(async () => {
   if (syncTouch.value == false) 
-    await invoke("clear_msg", {});
+    await try_invoke("clear_msg", {});
 });
 
 (async () => {

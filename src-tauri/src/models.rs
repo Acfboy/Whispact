@@ -30,7 +30,7 @@ pub struct MessageDraft {
     body: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Default)]
 pub struct DisposableDrafts {
     pub drafts: Vec<MessageDraft>,
 }
@@ -41,7 +41,7 @@ pub struct Instance {
     pub time: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Default)]
 pub struct SealedInstances {
     pub instances: Vec<Instance>,
 }
@@ -52,12 +52,12 @@ pub struct FinishedPlan {
     pub time: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Default)]
 pub struct PlanDrafts {
     pub drafts: HashMap<Uuid, Plan>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Default)]
 pub struct FinishedPlanList {
     pub list: Vec<FinishedPlan>,
 }
