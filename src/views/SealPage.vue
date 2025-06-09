@@ -2,6 +2,7 @@
   <v-container class="fill-height justify-center align-items ">
     <v-text-field variant="solo-filled" hint="输入要打卡的此刻，点击按钮后相碰确认。" append-inner-icon="mdi-send"
       @click:append-inner="onClick" persistent-hint v-model="msg"></v-text-field>
+
     <touchPrompt v-model:syncTouch="syncTouch" prompt="完成打卡。"></touchPrompt>
 
     <v-snackbar v-model="errorBar" multi-line>
@@ -20,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watchEffect } from "vue";
 import touchPrompt from "@/components/touch-prompt.vue"
 import { useRouter } from "vue-router";
 import { listen } from "@tauri-apps/api/event";
@@ -61,6 +62,11 @@ const onTouch = async (event: { payload: string }) => {
     success.value = true;
   }
 }
+
+watchEffect(async () => {
+  if (syncTouch.value == false) 
+    await invoke("clear_msg", {});
+});
 
 (async () => {
   await listen<string>("recv-seal-msg", onTouch);

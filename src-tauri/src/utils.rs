@@ -36,6 +36,14 @@ pub async fn set_plan_sync_msg(app: AppHandle, plan: Plans) -> Result<(), Error>
 }
 
 #[command]
+pub async fn clear_msg(app: AppHandle) -> Result<(), Error> {
+    let state = app.state::<Mutex<DeviceBridge>>();
+    let mut guard = state.lock().await;
+    (*guard).set_msg(Message::Empty)?;
+    Ok(())
+}
+
+#[command]
 pub fn request_blep_bluetooth_permissions(app: AppHandle) -> Result<PermissionState, Error> {
     app.blep()
         .request_bluetooth_permission()

@@ -47,10 +47,16 @@ export async function genRandomPlan() {
     plans.drafts.set(uuid, rand);
   }
   try {
-  await invoke("store_plan_drafts", { data: plans });
-  } catch(e) {
-    alert(e)
+    await invoke("store_plan_drafts", { data: plans });
+  } catch (e) {
+    alert(e);
   }
+}
+
+export function getTimeStamp() {
+  const d = new Date();
+  const timestamp = d.toLocaleDateString() + " " + d.toLocaleTimeString();
+  return timestamp;
 }
 
 export function randomUUID(): string {

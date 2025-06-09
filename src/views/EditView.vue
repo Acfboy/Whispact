@@ -40,7 +40,7 @@ const textTitle = ref(route.query.title || "");
 
 onBeforeRouteLeave(async () => {
   if (props.type == "Plan") {
-    let data: { drafts: {} } = await invoke("load_plan_drafts");
+    let data: { drafts: object } = await invoke("load_plan_drafts");
     let drafts = new Map(Object.entries(data.drafts));
     drafts.set(props.id, { title: textTitle.value, body: textBody.value });
     await invoke("store_plan_drafts", { data: { drafts } });
