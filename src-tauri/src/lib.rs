@@ -102,7 +102,8 @@ pub fn run() {
             set_seal_msg,
             set_plan_sync_msg,
             load_plan_drafts,
-            store_plan_drafts
+            store_plan_drafts,
+            clear_msg
         ])
         .setup(|app| {
             let scope = app.fs_scope();

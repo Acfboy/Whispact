@@ -51,11 +51,11 @@ const router = createRouter({
       component: PlanPage,
     },
     {
-      path: '/edit/:type/:id?', 
-      name: 'edit',
+      path: "/edit/:type/:id?",
+      name: "edit",
       component: EditView,
-      props: true
-    }
+      props: true,
+    },
   ],
 });
 export default router;

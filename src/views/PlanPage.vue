@@ -7,7 +7,7 @@
   <v-tabs-window v-model="tab">
     <v-tabs-window-item :value="Tab.Finished">
       <v-list class="ma-2" lines="two">
-        <v-list-item v-for="(c, i) in totalFinished.list" :ket="i">
+        <v-list-item v-for="(c, i) in totalFinished.list" :key="i">
           <v-list-item-title>{{ c.plan.title }}</v-list-item-title>
           <v-list-item-subtitle>{{ c.plan.body }}</v-list-item-subtitle>
           <template v-slot:append> <v-list-item-action>
@@ -28,6 +28,7 @@
           <template v-slot:append>
             <v-btn icon="mdi-pencil" variant="text" @click="edit(uuid)"></v-btn>
             <v-btn icon="mdi-trash-can-outline" variant="text" @click="del(uuid)"></v-btn>
+            <v-btn icon="mdi-check" color="green-darken-2" variant="text" @click="checkPlan(uuid)"></v-btn>
           </template>
         </v-list-item>
       </v-list>
@@ -51,7 +52,7 @@
     </v-card>
   </v-dialog>
 
-  <touch-prompt v-model="touching" prompt="记录计划完成。"> </touch-prompt>
+  <touch-prompt v-model="touching" :prompt="`记录计划${touchingPrompt}完成。`"> </touch-prompt>
 
   <v-snackbar :timeout="2000" color="red-lighten-1" v-model="conflictAlert">
     {{ `同步失败：双方的计划有冲突。(第一个冲突：${conflictPrompt})` }}
@@ -65,8 +66,8 @@
 <script setup lang="ts">
 import { FinishedPlanList, Plan, PlanDrafts, SealedInstances, SyncPlans } from '@/types';
 import { invoke } from '@tauri-apps/api/core';
-import { randomUUID } from '@/utils/utils';
-import { computed, onMounted, ref } from 'vue';
+import { getTimeStamp, randomUUID } from '@/utils/utils';
+import { computed, onMounted, ref, watchEffect } from 'vue';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
 import touchPrompt from '@/components/touch-prompt.vue';
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
@@ -105,7 +106,6 @@ const sealed = ref<SealedInstances>({ instances: [] });
 const finishedPlans = ref<FinishedPlanList>({ list: [] });
 
 const touching = ref(false);
-const touchingPrompt = ref("");
 const planToFinish = ref<undefined | string>(undefined);
 const sync = async () => {
   const data: SyncPlans = {
@@ -116,13 +116,24 @@ const sync = async () => {
   touching.value = true;
 };
 
+const touchingPrompt = ref("");
+const checkPlan = async (uuid: string) => {
+  planToFinish.value = uuid;
+  await sync();
+};
+
+watchEffect(async () => {
+  if (touching.value == false)
+    await invoke("clear_msg", {});
+});
+
 const conflictAlert = ref(false);
 const conflictPrompt = ref("");
 
 let unlisenData: undefined | UnlistenFn = undefined;
 const syncSuccess = ref(false);
 (async () => {
-  unlisenData = await listen<{ selectedPlans?: string, plans: {} }>("recv-plan-sync", async (event) => {
+  unlisenData = await listen<{ selectedPlans?: string, plans: object }>("recv-plan-sync", async (event) => {
     const counterPlan: Map<string, Plan> = new Map(Object.entries(event.payload.plans));
     const conflict = [...counterPlan.entries()].some(([uuid, plan]) => {
       const entry = planDrafts.value.drafts.get(uuid);
@@ -142,11 +153,21 @@ const syncSuccess = ref(false);
     counterPlan.forEach((plan: Plan, uuid: string) => {
       newData.set(uuid, plan);
     });
-    planDrafts.value = { drafts: newData };
-    await invoke('store_plan_drafts', { data: planDrafts.value });
 
-    syncSuccess.value = true;              
-  });
+    if (event.payload.selectedPlans) {
+      let finished = finishedPlans.value.list;
+      const plan = newData.get(event.payload.selectedPlans);
+      if (plan) {
+        finished.push({ plan, time: getTimeStamp() });
+        newData.delete(event.payload.selectedPlans);
+        await invoke("store_finished_plan_list", { data: finished })
+      }
+    }
+      planDrafts.value = { drafts: newData };
+      await invoke('store_plan_drafts', { data: planDrafts.value });
+
+      syncSuccess.value = true;
+    });
 })();
 
 const totalFinished = computed(() => {
@@ -170,7 +191,6 @@ const totalFinished = computed(() => {
     ].sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
   };
 });
-
 
 onMounted(async () => {
   sealed.value = await invoke("load_sealed_instances");
