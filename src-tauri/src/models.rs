@@ -73,6 +73,7 @@ pub enum MessageType {
     Disposable,
     Seal,
     PlanSync,
+    Mail,
     Empty,
 }
 
@@ -83,6 +84,30 @@ impl MessageType {
             Message::Empty => Self::Empty,
             Message::PlanSync(_) => Self::PlanSync,
             Message::Seal(_) => Self::Seal,
+            Message::Mail(_) => Self::Mail,
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Default)]
+pub struct Mail {
+    cover: String,
+    inner: MailInner,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+pub struct MailInner {
+    title: String,
+    body: String,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+struct MailCover {
+    sealed: bool,
+    cover: String,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+pub struct MailCoverList {
+    mails: HashMap<Uuid, MailCover>,
 }

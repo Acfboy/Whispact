@@ -2,7 +2,7 @@ pub mod central;
 pub mod peripheral;
 use std::sync::Arc;
 
-use crate::models::{Error, MessageType};
+use crate::models::{Error, Mail, MessageType};
 use async_trait::async_trait;
 use central::BLECentral;
 use peripheral::BLEPeripheral;
@@ -117,6 +117,9 @@ impl DeviceBridge {
                     Message::Disposable(s) => handle.emit("recv-disposable-msg", s),
                     Message::Seal(s) => handle.emit("recv-seal-msg", s),
                     Message::PlanSync(p) => handle.emit("recv-plan-sync", p),
+                    Message::Mail(p) => {
+                        handle.emit("recv-mail", &serde_json::from_str::<Mail>(p).unwrap())
+                    }
                     Message::Empty => Ok(()),
                 }
                 .expect("failed to send msg to frontend");

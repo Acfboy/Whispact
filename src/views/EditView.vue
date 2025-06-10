@@ -17,6 +17,7 @@ const props = defineProps({
   },
   type: {
     type: String,
+    validator: (value: string) => ["Plan", "Mail", "Disposable"].includes(value),
   },
 });
 
