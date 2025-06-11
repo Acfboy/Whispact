@@ -45,3 +45,22 @@ export enum MessageType {
   Empty,
   Seal,
 }
+
+export interface Mail {
+  cover: string;
+  inner: MailInner;
+}
+
+export interface MailInner {
+  title: string;
+  body: string;
+}
+
+export interface MailCover {
+  sealed: boolean;
+  cover: string;
+}
+
+export interface MailCoverList {
+  mails: Map<string, MailCover>;
+}

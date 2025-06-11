@@ -6,13 +6,6 @@
         </v-card-text>
       </v-card>
 
-      <v-card v-ripple prepend-icon="mdi-arrow-u-down-right" class="mb-8" variant="outlined" color="primary"
-        title="背靠背消息" subtitle="同步方位开启密语" width="70vw">
-        <v-card-text>
-          触碰后转身背对背，才会显示消息。
-        </v-card-text>
-      </v-card>
-
       <v-card @click="navigateTo('seal')" v-ripple   prepend-icon="mdi-clock-check-outline" class="mb-8" variant="outlined" color="primary" title="打卡此刻" subtitle="触碰封存时光胶囊" width="70vw">
         <v-card-text>
           共同记下这值得纪念的一刻。

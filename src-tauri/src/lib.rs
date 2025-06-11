@@ -103,7 +103,14 @@ pub fn run() {
             set_plan_sync_msg,
             load_plan_drafts,
             store_plan_drafts,
-            clear_msg
+            clear_msg,
+            store_mail_inner,
+            load_mail_inner,
+            store_mail_covers,
+            load_mail_covers,
+            store_mail_drafts_covers,
+            load_mail_drafts_covers,
+            set_mail_msg
         ])
         .setup(|app| {
             let scope = app.fs_scope();

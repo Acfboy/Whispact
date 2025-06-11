@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import { invoke } from '@tauri-apps/api/core';
+import { try_invoke } from '@/utils/utils';
 import { ref } from 'vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router';
 import { MessageDraft } from '../types'  // 添加类型导入
@@ -18,6 +18,7 @@ const props = defineProps({
   },
   type: {
     type: String,
+    validator: (value: string) => ["Plan", "Mail", "Disposable"].includes(value),
   },
 });
 
@@ -43,10 +44,10 @@ const textTitle = ref<string>(route.query.title as string || "");
 
 onBeforeRouteLeave(async () => {
   if (props.type == "Plan") {
-    let data: { drafts: object } = await invoke("load_plan_drafts");
+    let data: { drafts: object } = (await try_invoke("load_plan_drafts"))!;
     let drafts = new Map(Object.entries(data.drafts));
     drafts.set(props.id, { title: textTitle.value, body: textBody.value });
-    await invoke("store_plan_drafts", { data: { drafts } });
+    await try_invoke("store_plan_drafts", { data: { drafts } });
   }
   else if (props.type == "Disposable") {
     const result = await invoke("load_disposable_drafts") as { drafts: MessageDraft[] };
