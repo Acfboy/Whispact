@@ -9,6 +9,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { ref } from 'vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router';
+import { MessageDraft } from '../types'  // 添加类型导入
 
 const props = defineProps({
   id: {
@@ -35,8 +36,10 @@ const bodyLableMap = {
 const bodyLabel = ref(bodyLableMap[props.type as keyof typeof bodyLableMap]);
 
 const route = useRoute();
-const textBody = ref(route.query.body || "");
-const textTitle = ref(route.query.title || "");
+const textBody = ref<string>(route.query.body as string || "");
+const textTitle = ref<string>(route.query.title as string || "");
+
+
 
 onBeforeRouteLeave(async () => {
   if (props.type == "Plan") {
@@ -44,6 +47,20 @@ onBeforeRouteLeave(async () => {
     let drafts = new Map(Object.entries(data.drafts));
     drafts.set(props.id, { title: textTitle.value, body: textBody.value });
     await invoke("store_plan_drafts", { data: { drafts } });
+  }
+  else if (props.type == "Disposable") {
+    const result = await invoke("load_disposable_drafts") as { drafts: MessageDraft[] };
+    const drafts = result.drafts || [];
+    
+    if (textTitle.value || textBody.value) {
+      drafts.unshift({
+        title: textTitle.value || '无标题',
+        body: textBody.value
+      });
+      await invoke("store_disposable_drafts", { 
+        data: { drafts } 
+      });
+    }
   }
 });
 

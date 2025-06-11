@@ -6,7 +6,7 @@
         <div
           v-for="(draft, idx) in drafts"
           :key="draft.title"
-          class="mb-2"
+          class="mb-2 position-relative"
           style="width: 100%;"
         >
           <progressLine
@@ -18,10 +18,21 @@
             @click="addToBuffer"
           >
             <div class="d-flex flex-column">
-              <span class="text-subtitle-1">{{ draft.title }}</span>
+              <div class="d-flex justify-space-between align-center">
+                <span class="text-subtitle-1">{{ draft.title }}</span>
+              </div>
             </div>
           </progressLine>
+          <v-btn
+            icon="mdi-delete"
+            variant="text"
+            size="small"
+            color="error"
+            class="delete-btn"
+            @click.stop="deleteDraft(idx)"  
+          ></v-btn>
         </div>
+        
 
         <!-- 空状态时显示默认的进度条 -->
         <template v-if="drafts.length === 0">
@@ -32,7 +43,14 @@
 
         <!-- 加号输入框（不传 payload，不绑定 endPress） -->
         <div class="mb-2" style="width: 100%;">
-          <MessageInput @new-message="addMessage" />
+          <v-btn 
+            color="primary" 
+            block 
+            @click="navigateToEdit"
+            class="add-btn"
+          >
+            新建消息
+          </v-btn>
         </div>
 
         <!-- 预览内容弹窗 -->
@@ -56,11 +74,25 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import progressLine from "../components/progress-linear.vue"
-import MessageInput from "../components/MessageInput.vue"
+import { useRouter } from 'vue-router'  // 添加路由导入
+// import MessageInput from "../components/MessageInput.vue"
+// import EditView from "./EditView.vue"  // 添加 EditView 导入
 import { MessageDraft } from '../types'
 import { invoke } from '@tauri-apps/api/core'
 
 const drafts = ref<MessageDraft[]>([])
+const router = useRouter()  // 获取路由实例
+// const newMessageId = ref(randomUUID())
+
+const navigateToEdit = () => {
+  router.push({ 
+    name: 'edit',  // 路由名称
+    params: { 
+      type: 'Disposable',
+      id: String(drafts.value.length)  // 使用数组长度作为 id
+    }
+  })
+}
 
 async function saveDrafts() {
   await invoke('store_disposable_drafts', { data: { drafts: drafts.value } })
@@ -74,15 +106,24 @@ async function loadDrafts() {
     drafts.value = []
   }
 }
-
-const addMessage = async (message: { title: string; content: string }) => {
-  const draft: MessageDraft = {
-    title: message.title,
-    body: message.content
+const deleteDraft = async (index: number) => {
+  console.log(index)
+  if (index >= 0 && index < drafts.value.length) {
+    // 从数组中删除指定索引的元素
+    drafts.value.splice(index, 1)
+    // 保存更新后的草稿
+    await saveDrafts()
   }
-  drafts.value.unshift(draft)
-  await saveDrafts()
 }
+
+// const addMessage = async (message: { title: string; content: string }) => {
+//   const draft: MessageDraft = {
+//     title: message.title,
+//     body: message.content
+//   }
+//   drafts.value.unshift(draft)
+//   await saveDrafts()
+// }
 
 const previewDialog = ref(false)
 const previewIndex = ref<number | null>(null)
@@ -99,10 +140,10 @@ const closePreview = () => {
   previewIndex.value = null
 }
 
-const deleteDraft = async (title: string) => {
-  drafts.value = drafts.value.filter(draft => draft.title !== title)
-  await saveDrafts()
-}
+// const deleteDraft = async (title: string) => {
+//   drafts.value = drafts.value.filter(draft => draft.title !== title)
+//   await saveDrafts()
+// }
 
 const addToBuffer = async (payload: unknown) => {
   if (typeof payload === 'number' && payload >= 0 && payload < drafts.value.length) {
@@ -123,5 +164,15 @@ onMounted(() => {
 <style scoped>
 .mb-2 {
   margin-bottom: 8px;
+}
+.delete-btn {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+.add-btn {
+  margin-top: 10px;
 }
 </style>
