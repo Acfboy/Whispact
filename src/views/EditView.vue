@@ -10,6 +10,7 @@ import { try_invoke } from '@/utils/utils';
 import { ref } from 'vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router';
 import { MessageDraft } from '../types'  // 添加类型导入
+import { invoke } from '@tauri-apps/api/core'
 
 const props = defineProps({
   id: {
