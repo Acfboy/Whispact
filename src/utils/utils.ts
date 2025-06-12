@@ -1,4 +1,4 @@
-import { Instance, Plan, PlanDrafts, SealedInstances } from "@/types";
+import { Instance, MailCover, MailCoverList, MailInner, Plan, PlanDrafts, SealedInstances } from "@/types";
 import { invoke, InvokeArgs } from "@tauri-apps/api/core";
 import { emit } from "@tauri-apps/api/event";
 import { error } from "@tauri-apps/plugin-log";
@@ -47,11 +47,7 @@ export async function genRandomPlan() {
     };
     plans.drafts.set(uuid, rand);
   }
-  try {
-    await try_invoke("store_plan_drafts", { data: plans });
-  } catch (e) {
-    alert(e);
-  }
+  await try_invoke("store_plan_drafts", { data: plans });
 }
 
 export function getTimeStamp() {
@@ -62,6 +58,27 @@ export function getTimeStamp() {
 
 export function randomUUID(): string {
   return crypto.randomUUID();
+}
+
+export async function genRandomMail() {
+  const uuid = randomUUID();
+  const cover: MailCover = { sealed: false, cover: randString(), timestamp: getTimeStamp() };
+  const coverList: MailCoverList = { mails: new Map([[uuid, cover]]) };
+  const inner: MailInner = { title: randString(), body: randString() + randString() };
+  await try_invoke("store_mail_drafts_covers", { data: coverList });
+  await try_invoke("store_mail_inner", { uuid, data: inner });
+}
+
+export async function genRandomInbox() {
+  const coverList: MailCoverList = { mails: new Map([]) };
+  for (let i = 0; i < 5; i++) {
+    const uuid = randomUUID();
+    const cover: MailCover = { sealed: true, cover: randString(), timestamp: getTimeStamp() };
+    const inner: MailInner = { title: randString(), body: randString() + randString() };
+    await try_invoke("store_mail_inner", { uuid, data: inner });
+    coverList.mails.set(uuid, cover);
+  }
+  await try_invoke("store_mail_covers", { data: coverList });
 }
 
 export async function try_invoke<T>(
@@ -89,6 +106,6 @@ export function timeStampUuid(): string {
   return `${timeHigh.toString(16).padStart(8, "0")}-${timeLow
     .toString(16)
     .padStart(4, "0")}-1${rand1.toString(16).padStart(3, "0")}-${rand2
-    .toString(16)
-    .padStart(4, "0")}-${rand3.toString(16).padStart(12, "0")}`;
+      .toString(16)
+      .padStart(4, "0")}-${rand3.toString(16).padStart(12, "0")}`;
 }

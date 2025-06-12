@@ -97,7 +97,7 @@ onMounted(async () => {
       </v-btn>
 
       <v-btn value="mailbox" to="/mailbox">
-        <v-icon>mdi-email-outline</v-icon>
+        <v-icon>mdi-email</v-icon>
         <span>信箱</span>
       </v-btn>
     </v-bottom-navigation>

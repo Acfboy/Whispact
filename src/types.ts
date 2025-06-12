@@ -59,6 +59,7 @@ export interface MailInner {
 export interface MailCover {
   sealed: boolean;
   cover: string;
+  timestamp: string,
 }
 
 export interface MailCoverList {

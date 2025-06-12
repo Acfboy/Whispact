@@ -85,6 +85,7 @@ class Nfc2Plugin(private val activity: Activity) : Plugin(activity) {
         //     sendError("NFC_ADAPTER_NOT_AVAILABLE", "NFC adapter is not available")
         // }
         checkNfcStatus()
+        prefs.registerOnSharedPreferenceChangeListener(sharedPreferencesChangeListener)
     }
     @Command
     fun stopHce(invoke: Invoke) {

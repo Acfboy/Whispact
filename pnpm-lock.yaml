@@ -14,6 +14,9 @@ importers:
       '@tauri-apps/api':
         specifier: ^2
         version: 2.4.1
+      '@tauri-apps/plugin-biometric':
+        specifier: ^2.2.1
+        version: 2.2.1
       '@tauri-apps/plugin-fs':
         specifier: ~2
         version: 2.2.1
@@ -507,6 +510,9 @@ packages:
     resolution: {integrity: sha512-9Ta81jx9+57FhtU/mPIckDcOBtPTUdKM75t4+aA0X84b8Sclb0jy1xA8NplmcRzp2fsfIHNngU2NiRxsW5+yOQ==}
     engines: {node: '>= 10'}
     hasBin: true
+
+  '@tauri-apps/plugin-biometric@2.2.1':
+    resolution: {integrity: sha512-W74n32/PLpR4aT2DgwvKQqiOvINhCSj+pPdeuANM3fe/ZxEz7NnpMk0LUvOttbNmq89zR7UgIWg62JqH/e1+Dg==}
 
   '@tauri-apps/plugin-fs@2.2.1':
     resolution: {integrity: sha512-KdGzvvA4Eg0Dhw55MwczFbjxLxsTx0FvwwC/0StXlr6IxwPUxh5ziZQoaugkBFs8t+wfebdQrjBEzd8NmmDXNw==}
@@ -1488,6 +1494,10 @@ snapshots:
       '@tauri-apps/cli-win32-arm64-msvc': 2.4.1
       '@tauri-apps/cli-win32-ia32-msvc': 2.4.1
       '@tauri-apps/cli-win32-x64-msvc': 2.4.1
+
+  '@tauri-apps/plugin-biometric@2.2.1':
+    dependencies:
+      '@tauri-apps/api': 2.4.1
 
   '@tauri-apps/plugin-fs@2.2.1':
     dependencies:

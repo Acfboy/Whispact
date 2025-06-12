@@ -105,6 +105,7 @@ pub struct MailInner {
 struct MailCover {
     sealed: bool,
     cover: String,
+    timestamp: String,
 }
 
 #[derive(Serialize, Deserialize, Default)]
