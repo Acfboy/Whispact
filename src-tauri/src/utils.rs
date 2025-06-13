@@ -201,3 +201,10 @@ pub fn load_mail_drafts_covers(app: AppHandle) -> Result<MailCoverList, Error> {
     };
     Ok(value)
 }
+
+#[command]
+pub fn delete_mail(app: AppHandle, uuid: Uuid) -> Result<(), Error> {
+    let store = app.store("store.json").map_err(Into::<Error>::into)?;
+    store.delete(format!("mail-{}", uuid));
+    Ok(())
+}

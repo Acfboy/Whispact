@@ -6,6 +6,7 @@
 </template>
 
 <script setup lang="ts">
+import { MailInner } from '@/types';
 import { try_invoke } from '@/utils/utils';
 import { ref } from 'vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router';
@@ -36,8 +37,8 @@ const bodyLableMap = {
 const bodyLabel = ref(bodyLableMap[props.type as keyof typeof bodyLableMap]);
 
 const route = useRoute();
-const textBody = ref(route.query.body || "");
-const textTitle = ref(route.query.title || "");
+const textBody = ref(route.query.body as string || "");
+const textTitle = ref(route.query.title as string || "");
 
 onBeforeRouteLeave(async () => {
   if (props.type == "Plan") {
@@ -45,6 +46,9 @@ onBeforeRouteLeave(async () => {
     let drafts = new Map(Object.entries(data.drafts));
     drafts.set(props.id, { title: textTitle.value, body: textBody.value });
     await try_invoke("store_plan_drafts", { data: { drafts } });
+  } else if (props.type == "Mail") {
+    const data: MailInner = { title: textTitle.value, body: textBody.value };
+    await try_invoke("store_mail_inner", { uuid: props.id, data });
   }
 });
 

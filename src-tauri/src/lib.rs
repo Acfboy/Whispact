@@ -111,7 +111,8 @@ pub fn run() {
             load_mail_covers,
             store_mail_drafts_covers,
             load_mail_drafts_covers,
-            set_mail_msg
+            set_mail_msg,
+            delete_mail
         ])
         .setup(|app| {
             let scope = app.fs_scope();

@@ -3,7 +3,8 @@ import { computed, onMounted, ref } from "vue";
 import { listen } from "@tauri-apps/api/event";
 import { error } from '@tauri-apps/plugin-log';
 import { useRoute, useRouter } from "vue-router";
-import { try_invoke } from "./utils/utils";
+import { getTimeStamp, timeStampUuid, try_invoke } from "./utils/utils";
+import { Mail, MailCover, MailCoverList } from "./types";
 // import { navigateTo } from "./utils";
 
 const pageName = {
@@ -15,10 +16,11 @@ const pageName = {
   "disposable": "一次性消息",
   "mailbox": "信箱",
   "seal": "打卡此刻",
-  "edit": "编辑"
+  "edit": "编辑",
+  "read": "信件内容"
 }
 
-const goBackSet = new Set(["log", "prompt", "disposable", "settings", "seal", "edit"]);
+const goBackSet = new Set(["log", "prompt", "disposable", "settings", "seal", "edit", "read"]);
 
 const route = useRoute();
 const currentName = computed(() => route.name as keyof typeof pageName);
@@ -53,6 +55,19 @@ const drawer = ref(false);
     errorBar.value = true;
   });
 })();
+
+
+const recvMail = ref(false);
+listen("recv-mail", async (event: { payload: Mail }) => {
+  const uuid = timeStampUuid();
+  const inner = event.payload.inner;
+  const cover: MailCover = { cover: event.payload.cover, sealed: true, timestamp: getTimeStamp() };
+  let covers: MailCoverList = { mails: new Map(Object.entries((await try_invoke<{ mails: object }>("load_mail_covers"))!.mails)) };
+  covers.mails.set(uuid, cover);
+  await try_invoke("store_mail_covers", { data: covers });
+  await try_invoke("store_mail_inner", { uuid, data: inner });
+  recvMail.value = true;
+});
 
 onMounted(async () => {
   await try_invoke("request_blep_bluetooth_permissions", {});
@@ -110,6 +125,11 @@ onMounted(async () => {
           关闭
         </v-btn>
       </template>
+    </v-snackbar>
+
+
+    <v-snackbar :timeout="2000" color="green-lighten-3" v-model="recvMail">
+      收到一封信
     </v-snackbar>
   </v-app>
 </template>

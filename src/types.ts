@@ -44,6 +44,7 @@ export enum MessageType {
   PlanSync,
   Empty,
   Seal,
+  Mail,
 }
 
 export interface Mail {
@@ -59,7 +60,7 @@ export interface MailInner {
 export interface MailCover {
   sealed: boolean;
   cover: string;
-  timestamp: string,
+  timestamp: string;
 }
 
 export interface MailCoverList {

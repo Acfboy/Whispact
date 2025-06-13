@@ -7,6 +7,7 @@ import LogPage from "@/views/LogPage.vue";
 import MailboxPage from "@/views/MailboxPage.vue";
 import PlanPage from "@/views/PlanPage.vue";
 import EditView from "@/views/EditView.vue";
+import ReadingPage from "@/views/ReadingPage.vue";
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -55,6 +56,11 @@ const router = createRouter({
       name: "edit",
       component: EditView,
       props: true,
+    },
+    {
+      path: "/read",
+      name: "read",
+      component: ReadingPage,
     },
   ],
 });
