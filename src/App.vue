@@ -5,7 +5,6 @@ import { error } from '@tauri-apps/plugin-log';
 import { useRoute, useRouter } from "vue-router";
 import { getTimeStamp, timeStampUuid, try_invoke } from "./utils/utils";
 import { Mail, MailCover, MailCoverList } from "./types";
-// import { navigateTo } from "./utils";
 
 const pageName = {
   "home": "Whispact",
@@ -17,7 +16,7 @@ const pageName = {
   "mailbox": "信箱",
   "seal": "打卡此刻",
   "edit": "编辑",
-  "read": "信件内容"
+  "read": "内容"
 }
 
 const goBackSet = new Set(["log", "prompt", "disposable", "settings", "seal", "edit", "read"]);
@@ -67,6 +66,12 @@ listen("recv-mail", async (event: { payload: Mail }) => {
   await try_invoke("store_mail_covers", { data: covers });
   await try_invoke("store_mail_inner", { uuid, data: inner });
   recvMail.value = true;
+});
+
+const disposablePrompt = ref(false);
+listen("recv-disposable-msg", (event: { payload: string }) => {
+  router.push({ name: "read", query: { title: "一次性消息", body: event.payload } });
+  disposablePrompt.value = true;
 });
 
 onMounted(async () => {
@@ -127,9 +132,12 @@ onMounted(async () => {
       </template>
     </v-snackbar>
 
-
     <v-snackbar :timeout="2000" color="green-lighten-3" v-model="recvMail">
       收到一封信
+    </v-snackbar>
+    
+    <v-snackbar :timeout="2000" color="red-lighten-3" v-model="disposablePrompt">
+      注意，离开预览界面这条永远丢失。
     </v-snackbar>
   </v-app>
 </template>

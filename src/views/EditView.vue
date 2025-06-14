@@ -6,12 +6,10 @@
 </template>
 
 <script setup lang="ts">
-import { MailInner } from '@/types';
+import { DisposableDrafts, MailInner } from '@/types';
 import { try_invoke } from '@/utils/utils';
 import { ref } from 'vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router';
-import { MessageDraft } from '../types'  // 添加类型导入
-import { invoke } from '@tauri-apps/api/core'
 
 const props = defineProps({
   id: {
@@ -53,16 +51,16 @@ onBeforeRouteLeave(async () => {
     await try_invoke("store_mail_inner", { uuid: props.id, data });
   }
   else if (props.type == "Disposable") {
-    const result = await invoke("load_disposable_drafts") as { drafts: MessageDraft[] };
+    const result: DisposableDrafts = (await try_invoke("load_disposable_drafts"))!;
     const drafts = result.drafts || [];
-    
+
     if (textTitle.value || textBody.value) {
       drafts.unshift({
         title: textTitle.value || '无标题',
         body: textBody.value
       });
-      await invoke("store_disposable_drafts", { 
-        data: { drafts } 
+      await try_invoke("store_disposable_drafts", {
+        data: { drafts }
       });
     }
   }
