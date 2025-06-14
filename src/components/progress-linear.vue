@@ -32,6 +32,10 @@ const props = defineProps({
   message: {
     type: String,
     default: ""
+  },
+  payload: {
+    type: [Number, String, Object],
+    default: null
   }
 })
 const emit = defineEmits(['endPress'])
@@ -39,17 +43,21 @@ const emit = defineEmits(['endPress'])
 const progress = ref(0)
 let timer = null
 let startTime = 0
+let longPressTriggered = false
 
 function handleStart() {
   if (timer) return
   startTime = Date.now()
   progress.value = 0
+  longPressTriggered = false
   timer = setInterval(() => {
     const elapsed = Date.now() - startTime
     progress.value = Math.min((elapsed / props.duration) * 100, 100)
     if (progress.value >= 100) {
       clearInterval(timer)
       timer = null
+      longPressTriggered = true
+      emit('endPress', props.payload)
     }
   }, 16)
 }
@@ -58,8 +66,11 @@ function handleEnd() {
   if (timer) {
     clearInterval(timer)
     timer = null
+    if (!longPressTriggered) {
+      progress.value = 0
+    }
+    return
   }
   progress.value = 0
-  emit('endPress')
 }
 </script>
